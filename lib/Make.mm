@@ -18,6 +18,11 @@ ifneq ($(strip $(MPI_DIR)),)
   RECURSE_DIRS += mpi
 endif
 
+# cuda
+ifneq ($(strip $(CUDA_DIR)),)
+  RECURSE_DIRS += cuda
+endif
+
 # use a tmp directory that knows what we are building in this directory structure
 PROJ_TMPDIR = $(BLD_TMPDIR)/lib
 

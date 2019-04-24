@@ -21,8 +21,9 @@ pyre.tests := mpi.tst.libmpi # pyre.tst.pyre pyre.tst.libpyre
 # if we have {cuda}, add it to the pile
 ${if ${findstring cuda,$(extern.available)},\
     ${eval pyre.packages += cuda.pkg} \
+    ${eval pyre.libraries += cuda.lib} \
     ${eval pyre.extensions += cuda.ext} \
-    ${eval cuda.libraries += cudart} \
+    ${eval cuda.libraries += cudart cublas curand cusolver} \
 ,}
 
 # if we have {gsl}, add it to the pile
@@ -109,6 +110,15 @@ cuda.pkg.root := packages/cuda/
 cuda.pkg.stem := cuda
 cuda.pkg.meta :=
 cuda.pkg.ext :=
+# the library
+cuda.lib.root := lib/cuda/
+cuda.lib.stem := cuda
+cuda.lib.extern := journal.lib
+cuda.lib.master := cuda.h
+cuda.lib.incdir := $(builder.dest.inc)pyre/cuda/
+cuda.lib.prerequisites += journal.lib
+cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
+cuda.lib.nvcc.flags += -std=c++11
 # the extension
 cuda.ext.root := extensions/cuda/
 cuda.ext.stem := cuda

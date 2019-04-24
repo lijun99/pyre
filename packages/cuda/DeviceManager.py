@@ -22,23 +22,22 @@ class DeviceManager(metaclass=Singleton):
     # public data
     count = 0
     devices = []
+    
+    # manager keeps track of the current device
+    # current_device can be switched by cuda.device(0), cuda.device(1) ...
+    current_device = None
 
 
     # interface
     def device(self, did=0):
         """
-        Set {did} as the current device
+        Set {did} as the default device
         """
+        self.current_device=self.devices[did]
+        self.current_device.initialize()
         # delegate to the extension module
-        return libcuda.setDevice(did)
-
-
-    def reset(self):
-        """
-        Reset the current device
-        """
-        # easy enough
-        return libcuda.resetDevice()
+        
+        return self.current_device
 
 
     # meta-methods
@@ -52,7 +51,9 @@ class DeviceManager(metaclass=Singleton):
         self.devices = libcuda.discover(Device)
         # set the count
         self.count = len(self.devices)
-
+        # set a default device
+        if self.count > 0: 
+            self.current_device = self.device() 
         # all done
         return
 

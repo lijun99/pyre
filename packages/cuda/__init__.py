@@ -32,11 +32,21 @@ def license() : print(cuda.license())
 from . import exceptions
 # register the exceptions with the extension module
 cuda.registerExceptions(exceptions)
-
+# cuda.curand_registerExceptions(exceptions)
 
 # build the device manager
 from .DeviceManager import DeviceManager
 manager = DeviceManager()
+devices = manager.devices
+device = manager.device
+current_device = manager.current_device
 
+# data on gpu
+from .Vector import Vector as vector
+from .Matrix import Matrix as matrix
+from .cuRand import cuRand as curand
+from .cuBlas import cuBlas as cublas
+
+#from .Timer import Timer as timer 
 
 # end of file

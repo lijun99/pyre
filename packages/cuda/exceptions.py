@@ -20,5 +20,9 @@ class Error(pyre.PyreError):
     Exception raised when the support layer detects a CUDA error
     """
 
+class CURANDError(Exception):
+    """
+    Exception raised when CURAND detects an error
+    """
 
 # end of file

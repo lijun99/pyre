@@ -15,10 +15,6 @@ RECURSE_DIRS = \
     timers
 
 # the optional packages
-# cuda
-ifneq ($(strip $(CUDA_DIR)),)
-  RECURSE_DIRS += cuda
-endif
 
 # mpi
 ifneq ($(strip $(MPI_DIR)),)
@@ -28,6 +24,11 @@ endif
 # gsl
 ifneq ($(strip $(GSL_DIR)),)
   RECURSE_DIRS += gsl
+endif
+
+# cuda
+ifneq ($(strip $(CUDA_DIR)),)
+  RECURSE_DIRS += cuda
 endif
 
 # postgres

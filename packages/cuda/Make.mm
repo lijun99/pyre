@@ -9,11 +9,18 @@
 include cuda.def
 # package name
 PACKAGE = cuda
+# my headers live here
+PROJ_INCDIR = $(BLD_INCDIR)/pyre/$(PROJECT)
 # the python modules
 EXPORT_PYTHON_MODULES = \
     Device.py \
     DeviceManager.py \
     exceptions.py \
+    Timer.py \
+    Vector.py \
+    Matrix.py \
+    cuRand.py \
+    cuBlas.py \
     __init__.py
 
 # standard targets

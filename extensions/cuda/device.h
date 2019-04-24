@@ -24,6 +24,12 @@ namespace pyre {
             const char * const resetDevice__doc__ = "reset the current device";
             PyObject * resetDevice(PyObject *, PyObject *);
 
+            // synchronizeDevice
+            const char * const synchronizeDevice__name__ = "synchronizeDevice";
+            const char * const synchronizeDevice__doc__ = "synchronize the current device";
+            PyObject * synchronizeDevice(PyObject *, PyObject *);
+
+
         } // of namespace cuda
     } // of namespace extensions
 } // of namespace pyre

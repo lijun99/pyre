@@ -4,7 +4,9 @@
 # orthologue
 # (c) 1998-2019 all rights reserved
 #
-
+from . import cuda as libcuda
+from .cuBlas import cuBlas as cublas
+from .cuRand import cuRand as curand
 
 class Device:
     """
@@ -38,6 +40,46 @@ class Device:
     maxGrid = ()
     maxThreadBlock = ()
 
+    cublas_handle = None
+    curand_generator = None
+
+    def initialize(self):
+        """
+        Initialize device and its handles
+        """
+        libcuda.setDevice(self.id)
+        if self.cublas_handle is None:
+            self.cublas_handle = cublas.create_handle()
+        if self.curand_generator is None:
+            self.curand_generator = curand.create_generator()
+        return self
+
+    def get_cublas_handle(self):
+        if self.cublas_handle is None:
+            self.cublas_handle = cublas.create_handle()
+        return self.cublas_handle
+
+    def get_curand_generator(self):
+        """
+        Get the curand_generator attached to device
+        """
+        if self.curand_generator is None:
+            self.curand_generator = curand.create_generator()
+        return self.curand_generator
+
+    def reset(self):
+        """
+        Reset the current device
+        """
+        # easy enough
+        return libcuda.resetDevice()
+
+    def synchronize(self):
+        """
+        Synchronize the current device
+        """
+        libcuda.synchronizeDevice()
+        return
 
     # debugging
     def dump(self, indent=''):

@@ -3,6 +3,11 @@
 /.bzr
 *~
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
 # machine-dependent config
 /.mm/config.def
 
