@@ -62,7 +62,9 @@ class cuBlas:
         
     def get_current_handle():
         # default device handle
-        from . import manager 
+        from . import manager
+        if manager.current_device is None:
+            manager.device(0)
         handle = manager.current_device.get_cublas_handle()
         return handle
 

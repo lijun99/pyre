@@ -39,13 +39,21 @@ from .DeviceManager import DeviceManager
 manager = DeviceManager()
 devices = manager.devices
 device = manager.device
-current_device = manager.current_device
 
 # data on gpu
 from .Vector import Vector as vector
 from .Matrix import Matrix as matrix
 from .cuRand import cuRand as curand
 from .cuBlas import cuBlas as cublas
+
+#from .Timer import Timer as timer 
+
+def current_device():
+    """
+    return current device
+    """
+    return manager.current_device
+
 
 #from .Timer import Timer as timer 
 

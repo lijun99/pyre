@@ -51,9 +51,9 @@ class DeviceManager(metaclass=Singleton):
         self.devices = libcuda.discover(Device)
         # set the count
         self.count = len(self.devices)
-        # set a default device
-        if self.count > 0: 
-            self.current_device = self.device() 
+        # set a default device 
+        #if self.count > 0: 
+        #    self.current_device = self.device() 
         # all done
         return
 

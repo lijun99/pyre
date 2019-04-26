@@ -56,7 +56,7 @@ def test():
     
 
     ##### CUDA ######
-    device = cuda.manager.current_device
+    device = cuda.manager.device(0)
     
     # copy sigma from cpu to hgpu
     dsigma = cuda.matrix(source=sigma, dtype=precision)

@@ -58,7 +58,9 @@ class cuRand:
         """
         Find the curand generator from current device
         """
-        from . import manager 
+        from . import manager
+        if manager.current_device is None:
+            manager.device(0)
         gen = manager.current_device.get_curand_generator()
         return gen
     
