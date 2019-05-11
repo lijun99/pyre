@@ -5,8 +5,6 @@
 # (c) 1998-2019 all rights reserved
 #
 from . import cuda as libcuda
-from .cuBlas import cuBlas as cublas
-from .cuRand import cuRand as curand
 
 class Device:
     """
@@ -40,31 +38,57 @@ class Device:
     maxGrid = ()
     maxThreadBlock = ()
 
-    cublas_handle = None
-    curand_generator = None
+    _cublas_handle = None
+    _curand_generator = None
+    _cusolverdn_handle = None
 
     def initialize(self):
         """
         Initialize device and its handles
         """
         libcuda.setDevice(self.id)
-        if self.cublas_handle is None:
-            self.cublas_handle = cublas.create_handle()
-        if self.curand_generator is None:
-            self.curand_generator = curand.create_generator()
+        #if self.cublas_handle is None:
+        #    self.cublas_handle = cublas.create_handle()
+        #if self.curand_generator is None:
+        #    self.curand_generator = curand.create_generator()
         return self
 
+    @property
+    def cublas_handle(self):
+        """
+        Return (create if not exist) a cublas handle
+        :return:
+        """
+        from .cuBlas import cuBlas as cublas
+        if self._cublas_handle is None:
+            self._cublas_handle = cublas.create_handle()
+        return self._cublas_handle
+
     def get_cublas_handle(self):
-        if self.cublas_handle is None:
-            self.cublas_handle = cublas.create_handle()
         return self.cublas_handle
 
+    @property
+    def cusolverdn_handle(self):
+        from .cuSolverDn import cuSolverDn as cusolver
+        if self._cusolverdn_handle is None:
+            self._cusolverdn_handle = cusolver.create_handle()
+        return self._cusolverdn_handle
+
+    def get_cusolverdn_handle(self):
+        return self.cusolverdn_handle
+
+    @property
+    def curand_generator(self):
+        """
+        Get (create if not exist) the curand_generator attached to device
+        :return:
+        """
+        from .cuRand import cuRand as curand
+        if self._curand_generator is None:
+            self._curand_generator = curand.create_generator()
+        return self._curand_generator
+
     def get_curand_generator(self):
-        """
-        Get the curand_generator attached to device
-        """
-        if self.curand_generator is None:
-            self.curand_generator = curand.create_generator()
         return self.curand_generator
 
     def reset(self):

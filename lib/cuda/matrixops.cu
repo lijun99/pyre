@@ -13,29 +13,47 @@
 
 
 namespace matrixops_kernels {
-    
-    template<typename Tout, typename Tin> 
+    template<typename T>
+    __global__ void _identity(T * const m, const size_t n);
+
+    template<typename Tout, typename Tin>
     __global__ void _copy_tile(Tout * const odata,  const size_t ldo,
                 const Tin * const idata, const size_t ldi, const size_t rows, const size_t cols);
 
-    template<typename T> 
+    template<typename T>
     __global__ void _copy_indices(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t ldi, const size_t rows, const size_t cols, const size_t * const indices);
 
-    template<typename T>         
+    template<typename T>
     __global__ void _transpose(T* const odata, const T* const idata, const size_t nrows, const size_t ncols);
 
     template<typename T>
     __global__ void _duplicate_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t m, const size_t n);
-    
+
 } // of namespace matrixops_kernels
 
+// identity matrix
+template<typename T>
+void cudalib::matrix::
+identity(T * const mat, const size_t n, cudaStream_t stream)
+{
+    //set matrix to 0 at first
+    cudaSafeCall(cudaMemsetAsync(mat, 0, n*n*sizeof(T), stream));
+    dim3 blockSize(BLOCKDIM);
+    dim3 gridSize(IDIVUP(n, blockSize.x));
+    matrixops_kernels::_identity<T><<<gridSize, blockSize, 0, stream>>>(mat, n);
+    cudaCheckError("matrixops_kernels::_identidy");
+}
 
-// copy a tile of data (submatrix or patch) 
+// explicit instantiation
+template void cudalib::matrix::identity<float>(float * const, const size_t, cudaStream_t);
+template void cudalib::matrix::identity<double>(double * const, const size_t, cudaStream_t);
+
+// copy a tile of data (submatrix or patch)
 template<typename Tout, typename Tin>
 void cudalib::matrix::
-copy_tile(Tout* const odata,  const size_t ldo, 
+copy_tile(Tout* const odata,  const size_t ldo,
                 const size_t o_m_start, const size_t o_n_start, // starting position of odata
                 const Tin* const idata, const size_t ldi,
                 const size_t i_m_start, const size_t i_n_start, // starting position of idata
@@ -62,6 +80,16 @@ template void cudalib::matrix::copy_tile<float, double>(float * const, const siz
 template void cudalib::matrix::copy_tile<double, float>(double * const, const size_t, const size_t, const size_t,
     const float * const, const size_t, const size_t, const size_t, const size_t, const size_t, cudaStream_t);
 
+// set diagonal elements for identity matrix
+template<typename T>
+__global__ void
+matrixops_kernels::_identity(T * const mat,  const size_t n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i < n)
+        mat[IDX2R(i, i, n)] = (T)1.0f;
+}
+
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
 // copy rows x cols from idata to odata
 template<typename Tout, typename Tin>
@@ -76,10 +104,10 @@ matrixops_kernels::_copy_tile(Tout * const odata,  const size_t ldo,
 }
 
 // copy data according to a list of indices
-// i.e., odata[x,y] = idata[x, indices[y]]  
+// i.e., odata[x,y] = idata[x, indices[y]]
 template<typename T>
 void cudalib::matrix::
-copy_indices(T * const odata,  const size_t ldo, 
+copy_indices(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t ldi,
                 const size_t m, const size_t n, // tile to be copied
                 const size_t * const indices, // indices for cols to be copied
@@ -100,7 +128,7 @@ template void cudalib::matrix::copy_indices<double>(double * const, const size_t
 
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
 // copy rows x cols from idata to odata
-// 
+//
 template<typename T>
 __global__ void
 matrixops_kernels::_copy_indices(T * const odata,  const size_t ldo,
@@ -116,7 +144,7 @@ matrixops_kernels::_copy_indices(T * const odata,  const size_t ldo,
 
 // matrix transpose with shared mem, unrolling and memory padding algorithm
 // idata a matrix (iM x iN) with leading dimension iN
-// odata a transposed matrix (iN x iM) with leading dimension iM 
+// odata a transposed matrix (iN x iM) with leading dimension iM
 template<typename T>
 void cudalib::matrix::
 transpose(T * const odata, const T* const idata, const size_t iM, const size_t iN, cudaStream_t stream)
@@ -142,7 +170,7 @@ template<typename T>
 __global__ void matrixops_kernels::
 _transpose(T* const odata, const T* const idata, const size_t nrows, const size_t ncols)
 {
-    // use a tile of shared memory as transpose buffer 
+    // use a tile of shared memory as transpose buffer
     __shared__ float tile[BDIMY][BDIMX * 2 + 2];
 
     // coordinate in original matrix
@@ -187,10 +215,10 @@ _transpose(T* const odata, const T* const idata, const size_t nrows, const size_
 }
 
 
-// duplicate a vector to multiple rows of a matrix 
+// duplicate a vector to multiple rows of a matrix
 template<typename T>
 void cudalib::matrix::
-duplicate_vector(T* const odata,  const size_t ldo, 
+duplicate_vector(T* const odata,  const size_t ldo,
                 const T* const idata, const size_t incx,
                 const size_t m, const size_t n, // tile to be copied
                 cudaStream_t stream)
@@ -200,10 +228,10 @@ duplicate_vector(T* const odata,  const size_t ldo,
     dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y), 1);
     matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
-    cudaCheckError("matrixops_kernels::_vector_duplicate");
+    cudaCheckError("matrixops_kernels::_duplicate_vector");
 }
 
-// explicit instantiation
+// explicit instantiation for shared library
 template void cudalib::matrix::duplicate_vector<float>(float * const, const size_t,
     const float * const, const size_t, const size_t, const size_t, cudaStream_t);
 template void cudalib::matrix::duplicate_vector<double>(double * const, const size_t,
@@ -211,17 +239,17 @@ template void cudalib::matrix::duplicate_vector<double>(double * const, const si
 
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
 // copy rows x cols from idata to odata
-// 
+//
 template<typename T>
 __global__ void
 matrixops_kernels::_duplicate_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t m, const size_t n)
 {
-  
+
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     if(x < n && y < m)
-        odata[y*ldo + x] = idata[incx*x];       
+        odata[y*ldo + x] = idata[incx*x];
 }
 
 // end of file

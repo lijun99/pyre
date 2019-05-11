@@ -21,6 +21,7 @@ EXPORT_PYTHON_MODULES = \
     Matrix.py \
     cuRand.py \
     cuBlas.py \
+    cuSolverDn.py \
     __init__.py
 
 # standard targets

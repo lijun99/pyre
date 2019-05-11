@@ -63,6 +63,7 @@ pyre::extensions::cuda::vector::togsl(PyObject *, PyObject * args) {
         {
             //double to double, direct memcpy
             cudaSafeCall(cudaMemcpy(dst->data, src->data, src->nbytes, cudaMemcpyDeviceToHost));
+            cudaSafeCall(cudaDeviceSynchronize());
             break;
         }
         case PYCUDA_FLOAT:
@@ -73,6 +74,7 @@ pyre::extensions::cuda::vector::togsl(PyObject *, PyObject * args) {
             // convert float to double on gpu
             cudalib::elementwise::conversion<double, float>(d_double, (float *)src->data, src->size);
             cudaSafeCall(cudaMemcpy(dst->data, d_double, src->size*sizeof(double), cudaMemcpyDefault));
+            cudaSafeCall(cudaDeviceSynchronize());
             cudaSafeCall(cudaFree(d_double));
             break;
         }
@@ -128,7 +130,7 @@ pyre::extensions::cuda::vector::fromgsl(PyObject *, PyObject * args) {
             double * d_double;
             size_t nbytes = src->size*sizeof(double);
             cudaSafeCall(cudaMalloc((void **)&d_double, nbytes));
-            // copy data from host to device(stored in temp) 
+            // copy data from host to device(stored in temp)
             cudaSafeCall(cudaMemcpy(d_double, src->data, nbytes, cudaMemcpyDefault));
             // convert double to single precision on gpu
             cudalib::elementwise::conversion<float, double>((float *)dst->data, d_double, dst->size);
@@ -137,7 +139,7 @@ pyre::extensions::cuda::vector::fromgsl(PyObject *, PyObject * args) {
         }
         default:
             PyErr_SetString(PyExc_TypeError, "Types other than float/double are not supported");
-            return 0;        
+            return 0;
     }
 
     // return None
@@ -153,7 +155,7 @@ PyObject *
 pyre::extensions::cuda::matrix::togsl(PyObject *, PyObject * args) {
     // the arguments
     PyObject * srcObj; //cuda_matrix
-    PyObject * dstObj; //gsl_matrix 
+    PyObject * dstObj; //gsl_matrix
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
                                   args, "O!O!:matrix_togsl",
@@ -176,6 +178,7 @@ pyre::extensions::cuda::matrix::togsl(PyObject *, PyObject * args) {
     case PYCUDA_DOUBLE:
         //double to double, direct memcpy
         cudaSafeCall(cudaMemcpy(dst->data, src->data, src->nbytes, cudaMemcpyDeviceToHost));
+        //cudaSafeCall(cudaDeviceSynchronize());
         break;
     case PYCUDA_FLOAT: {
         //float to double, use a double array on gpu as conversion buffer
@@ -185,11 +188,12 @@ pyre::extensions::cuda::matrix::togsl(PyObject *, PyObject * args) {
         // convert float to double on gpu
         cudalib::elementwise::conversion<double, float>(d_array, (float *)src->data, src->size);
         cudaSafeCall(cudaMemcpy(dst->data, d_array, d_nbytes, cudaMemcpyDefault));
+        //cudaSafeCall(cudaDeviceSynchronize());
         cudaSafeCall(cudaFree(d_array));
         break;}
     default:
         PyErr_SetString(PyExc_TypeError, "Types other than float/double are not supported");
-        return 0;        
+        return 0;
     }
 
     // return None
@@ -233,10 +237,10 @@ pyre::extensions::cuda::matrix::fromgsl(PyObject *, PyObject * args) {
         //float to double
         // create a temporary array on gpu with float type
         double * d_double;
-        size_t size = src->size1 * src->size2; 
+        size_t size = src->size1 * src->size2;
         size_t d_nbytes = size*sizeof(double);
         cudaSafeCall(cudaMalloc((void **)&d_double, d_nbytes));
-        // copy data from host to device(stored in temp) 
+        // copy data from host to device(stored in temp)
         cudaSafeCall(cudaMemcpy(d_double, src->data, d_nbytes, cudaMemcpyDefault));
         // convert double to single precision on gpu
         cudalib::elementwise::conversion<float, double>((float *)dst->data, d_double, size);
@@ -244,7 +248,7 @@ pyre::extensions::cuda::matrix::fromgsl(PyObject *, PyObject * args) {
         break; }
     default:
         PyErr_SetString(PyExc_TypeError, "Types other than float/double are not supported");
-        return 0;    
+        return 0;
     }
 
     // return None

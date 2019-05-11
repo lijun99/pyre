@@ -10,7 +10,6 @@
 import numpy
 import gsl
 from . import cuda as libcuda # the extension
-from . import Device
 
 # the class declaration
 class Matrix:
@@ -23,7 +22,7 @@ class Matrix:
         """
         copy cuda matrix to host (gsl or numpy)
         gsl.matrix is double precison only
-        numpy.ndarray can be any type 
+        numpy.ndarray can be any type
         """
         # if target is not given
         if target is None:
@@ -32,20 +31,20 @@ class Matrix:
                 libcuda.matrix_togsl(target.data, self.data)
             else: #numpy
                 target = numpy.ndarray(shape=self.shape, dtype=self.dtype)
-                libcuda.matrix_tonumpy(target, self.data)    
+                libcuda.matrix_tonumpy(target, self.data)
         # if target is a pre-allocated gsl.matrix
         elif isinstance(target, gsl.matrix):
             libcuda.matrix_togsl(target.data, self.data)
         # assume numpy ndarray for rest cases
-        else: 
+        else:
             libcuda.matrix_tonumpy(target, self.data)
 
-        # return    
+        # return
         return target
-        
+
     def copy_from_host(self, source):
         """
-        copy from a gsl(host) matrix  
+        copy from a gsl(host) matrix
         """
         # assuming pre-allocated with right shape
         if isinstance(source, gsl.matrix):
@@ -60,7 +59,7 @@ class Matrix:
         """
         libcuda.matrix_copy(self.data, other.data)
         return self
-        
+
     def clone(self):
         """
         clone to a new matrix
@@ -80,13 +79,13 @@ class Matrix:
         libcuda.matrix_copytile(out.data, (0,0), self.data, start, out.shape)
         # return submatrix
         return out
-        
-    # make an alias
+
+    # make an alias of view
     submatrix = view
-    
+
     def insert(self, src, start=(0,0), shape=None):
         """
-        insert (copy) a matrix from position start 
+        insert (copy) a matrix from position start
         """
         shape = src.shape if shape is None else shape
         libcuda.matrix_copytile(self.data, start, src.data, (0, 0), shape)
@@ -94,7 +93,7 @@ class Matrix:
 
     def copytile(self, src, start=(0,0), src_start=(0,0), shape=None):
         """
-        copy a tile of matrix from src        
+        copy a tile of matrix from src
         """
         shape = (min(self.shape[0]-start[0], src.shape[0]-src_start[0]),
                 min(self.shape[1]-start[1], src.shape[1]-src_start[1])) if shape is None else shape
@@ -108,8 +107,8 @@ class Matrix:
         batch = batch if batch is not None else dst.shape[0]
         libcuda.matrix_copycols(dst.data, self.data, (batch, indices.shape), indices.data)
         return dst
-        
-    
+
+
     def duplicateVector(self, src, size=None, incx=1):
         """
         duplicate batch copies of vector from src
@@ -117,30 +116,30 @@ class Matrix:
         size = size if size is not None else (self.shape[0], src.shape)
         libcuda.matrix_duplicate_vector(self.data, src.data, size, incx)
         return self
-        
-        
+
+
     def zero(self):
         """
         initialize all elements to 0
         """
         libcuda.matrix_zero(self.data)
         return self
-        
+
     def fill(self, value):
         """
         set all elements to a given value
         """
         libcuda.matrix_fill(self.data, value)
         return self
-        
+
     def print(self):
         """
         print elements by converting to gsl(host) matrix at first
         """
         print(self.copy_to_host(type='numpy'))
-        return
+        return self
 
- 
+
     def transpose(self, out=None):
         """
         transpose M(m,n)-> MT(n,m)
@@ -150,45 +149,69 @@ class Matrix:
             out = Matrix(shape=(self.shape[1], self.shape[0]), dtype=self.dtype)
         # call the wrapper
         libcuda.matrix_transpose(out.data, self.data)
-        # return 
+        # return
         return out
 
-    def inverse(self, out=None, uplo=1):
+    def inverse_cholesky(self, out=None, uplo=1):
         """
         Matrix inverse (in place if out is not provided) for symmetric matrix only
         only the lower, upper part is used for uplo=0,1
         """
         from . import cublas
+        from . import cusolverdn
 
         if out is None:
             out = self
         else:
             out.copy(self)
 
+        handle = cusolverdn.get_current_handle()
         # change notation to cublas column major
         uplo_cblas = cublas.CUBLAS_FILL_MODE_LOWER if uplo == cublas.FillModeUpper else cublas.CUBLAS_FILL_MODE_UPPER
-        
-        libcuda.matrix_inverse_symm(out.data, uplo_cblas)
+
+        libcuda.matrix_inverse_cholesky(handle, out.data, uplo_cblas)
+        return out
+
+    def inverse(self, out=None):
+        """
+        Matrix inverse with LU
+        :param out: output matrix if different from input
+        :param uplo: inverse matrix store mode
+        :return: self or output
+        """
+        from . import cublas
+        from . import cusolverdn
+
+        if out is None:
+            out = self
+        else:
+            out.copy(self)
+
+        # get handle
+        handle = cusolverdn.get_current_handle()
+        libcuda.matrix_inverse_lu_cusolver(handle, out.data)
         return out
 
     def Cholesky(self, out=None, uplo=1):
         """
-        Cholesky decomposition 
+        Cholesky decomposition
         """
-        # uplo = 1 for upper         
+        # uplo = 1 for upper
         from . import cublas
+        from . import cusolverdn
         # check output matrix
         if out is None:
             out = self
         else:
             out.copy(self)
         # change notation to cublas column major
-        uplo_cblas = cublas.CUBLAS_FILL_MODE_LOWER if uplo == cublas.FillModeUpper else cublas.CUBLAS_FILL_MODE_UPPER 
+        uplo_cblas = cublas.CUBLAS_FILL_MODE_LOWER if uplo == cublas.FillModeUpper else cublas.CUBLAS_FILL_MODE_UPPER
+        # get a cusolver handle
+        handle = cusolverdn.get_current_handle()
         # call extension
-        libcuda.matrix_cholesky(out.data, uplo_cblas)
+        libcuda.matrix_cholesky(handle, out.data, uplo_cblas)
         # return
         return out
-
 
     def determinant(self, triangular=False):
         """
@@ -232,7 +255,7 @@ class Matrix:
                 return
             if len(shape)!=2:
                 raise Exception("shape should be a 2-element tuple (m,n), the input shape was: {}.".format(shape))
-                return 
+                return
             # store
             self.shape = tuple(map(int, shape))
             self.size=self.shape[0]*self.shape[1]
@@ -255,7 +278,7 @@ class Matrix:
             return self
         # otherwise, let the interpreter know
         raise NotImplemented
-        
+
     def __isub__(self, other):
         """
         In-place subtraction with the elements of {other}

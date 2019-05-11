@@ -11,13 +11,11 @@
 #define cudalib_cudalib_h
 
 // include all cuda utitilies
-
-#include <portinfo>
-#include "cuerror.h"
-#include "cuhelper.h"
-#include "cutimer.h"
-#include "cuvector.h"
-#include "cumatrix.h"
+#include "error.h"
+#include "helper.h"
+#include "timer.h"
+#include "cuda_vector.h"
+#include "cuda_matrix.h"
 #include "elementwise.h"
 #include "linalg.h"
 #include "matrixops.h"

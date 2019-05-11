@@ -12,15 +12,14 @@
 
 // include all cuda utitilies
 
-#include <portinfo>
-#include <pyre/cuda/cuerror.h>
-#include <pyre/cuda/cuhelper.h>
-#include <pyre/cuda/cutimer.h>
-#include <pyre/cuda/cuvector.h>
-#include <pyre/cuda/cumatrix.h>
+#include <pyre/cuda/error.h>
+#include <pyre/cuda/helper.h>
+#include <pyre/cuda/timer.h>
+#include <pyre/cuda/cuda_vector.h>
+#include <pyre/cuda/cuda_matrix.h>
 #include <pyre/cuda/elementwise.h>
 #include <pyre/cuda/matrixops.h>
 #include <pyre/cuda/linalg.h>
 
-#endif //cudalib_cudalib_h
+#endif //pyre_cuda_h
 // end of file

@@ -52,6 +52,7 @@ pyre::extensions::cuda::vector::tonumpy(PyObject *, PyObject * args) {
 
     // copy the data
     cudaSafeCall(cudaMemcpy(PyArray_DATA(dst), v->data, v->nbytes, cudaMemcpyDefault));
+    // cudaSafeCall(cudaDeviceSynchronize());
 
     // return None
     Py_INCREF(Py_None);
@@ -116,6 +117,7 @@ pyre::extensions::cuda::matrix::tonumpy(PyObject *, PyObject * args) {
 
     // copy the data
     cudaSafeCall(cudaMemcpy(PyArray_DATA(dst), m->data, m->nbytes, cudaMemcpyDefault));
+    //cudaSafeCall(cudaDeviceSynchronize());
     
     // return None
     Py_INCREF(Py_None);

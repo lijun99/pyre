@@ -47,7 +47,7 @@ namespace pyre {
                   extern const char * const imul__name__;
                   extern const char * const imul__doc__;
                   PyObject * imul(PyObject *, PyObject *);
-                  
+
                   // copy
                   extern const char * const copy__name__;
                   extern const char * const copy__doc__;
@@ -78,10 +78,15 @@ namespace pyre {
                   extern const char * const inverse__doc__;
                   PyObject * inverse(PyObject *, PyObject *);
 
+                  // inverse_lu
+                  extern const char * const inverse_lu_cusolver__name__;
+                  extern const char * const inverse_lu_cusolver__doc__;
+                  PyObject * inverse_lu_cusolver(PyObject *, PyObject *);
+
                   // inverse_symm
-                  extern const char * const inverse_symm__name__;
-                  extern const char * const inverse_symm__doc__;
-                  PyObject * inverse_symm(PyObject *, PyObject *);
+                  extern const char * const inverse_cholesky__name__;
+                  extern const char * const inverse_cholesky__doc__;
+                  PyObject * inverse_cholesky(PyObject *, PyObject *);
 
                   // cholesky factorization
                   extern const char * const cholesky__name__;
@@ -102,8 +107,8 @@ namespace pyre {
                   extern const char * const determinant__name__;
                   extern const char * const determinant__doc__;
                   PyObject * determinant(PyObject *, PyObject *);
-                  
- 
+
+
             } // of namespace matrix
         } // of namespace cuda
     } // of namespace extensions

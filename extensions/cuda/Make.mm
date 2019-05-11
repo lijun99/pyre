@@ -35,11 +35,12 @@ PROJ_SRCS = \
     numpy.cc \
     curand.cc \
     cublas.cc \
+    cusolver.cc \
     stream.cc \
     timer.cc \
 
 # actions
-export:: export-headers 
+export:: export-headers
 
 EXPORT_INCDIR = $(EXPORT_ROOT)/include/pyre/$(PROJECT)
 EXPORT_HEADERS = \

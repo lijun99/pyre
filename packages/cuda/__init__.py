@@ -45,8 +45,9 @@ from .Vector import Vector as vector
 from .Matrix import Matrix as matrix
 from .cuRand import cuRand as curand
 from .cuBlas import cuBlas as cublas
+from .cuSolverDn import cuSolverDn as cusolverdn
 
-#from .Timer import Timer as timer 
+#from .Timer import Timer as timer
 
 def current_device():
     """

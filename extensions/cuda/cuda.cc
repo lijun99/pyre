@@ -23,13 +23,14 @@
 // the module method declarations
 #include "discover.h"
 
-// 
+//
 #include "vector.h"
 #include "matrix.h"
 #include "gsl.h"
 #include "numpy.h"
 #include "curand.h"
 #include "cublas.h"
+#include "cusolver.h"
 #include "stream.h"
 #include "timer.h"
 
@@ -69,7 +70,7 @@ namespace pyre {
                 {vector::iadd__name__, vector::iadd, METH_VARARGS, vector::iadd__doc__},
                 {vector::isub__name__, vector::isub, METH_VARARGS, vector::isub__doc__},
                 {vector::imul__name__, vector::imul, METH_VARARGS, vector::imul__doc__},
-                
+
                 // matrix
                 {matrix::alloc__name__, matrix::alloc, METH_VARARGS, matrix::alloc__doc__},
                 {matrix::zero__name__, matrix::zero, METH_VARARGS, matrix::zero__doc__},
@@ -83,7 +84,8 @@ namespace pyre {
                 {matrix::duplicate_vector__name__, matrix::duplicate_vector, METH_VARARGS, matrix::duplicate_vector__doc__},
                 {matrix::transpose__name__, matrix::transpose, METH_VARARGS, matrix::transpose__doc__},
                 {matrix::inverse__name__, matrix::inverse, METH_VARARGS, matrix::inverse__doc__},
-                {matrix::inverse_symm__name__, matrix::inverse_symm, METH_VARARGS, matrix::inverse_symm__doc__},
+                {matrix::inverse_lu_cusolver__name__, matrix::inverse_lu_cusolver, METH_VARARGS, matrix::inverse_lu_cusolver__doc__},
+                {matrix::inverse_cholesky__name__, matrix::inverse_cholesky, METH_VARARGS, matrix::inverse_cholesky__doc__},
                 {matrix::cholesky__name__, matrix::cholesky, METH_VARARGS, matrix::cholesky__doc__},
                 {matrix::determinant_triangular__name__, matrix::determinant_triangular, METH_VARARGS, matrix::determinant_triangular__doc__},
                 {matrix::logdet_triangular__name__, matrix::logdet_triangular, METH_VARARGS, matrix::logdet_triangular__doc__},
@@ -94,7 +96,7 @@ namespace pyre {
                 {vector::fromgsl__name__, vector::fromgsl, METH_VARARGS, vector::fromgsl__doc__},
                 {matrix::togsl__name__, matrix::togsl, METH_VARARGS, matrix::togsl__doc__},
                 {matrix::fromgsl__name__, matrix::fromgsl, METH_VARARGS, matrix::fromgsl__doc__},
-                
+
                 // numpy hook
                 {vector::tonumpy__name__, vector::tonumpy, METH_VARARGS, vector::tonumpy__doc__},
                 {vector::fromnumpy__name__, vector::fromnumpy, METH_VARARGS, vector::fromnumpy__doc__},
@@ -103,22 +105,26 @@ namespace pyre {
 
                 // curand
                 {curand::registerExceptions__name__, curand::registerExceptions, METH_VARARGS, curand::registerExceptions__doc__},
-                {curand::alloc__name__, curand::alloc, METH_VARARGS, curand::alloc__name__},
-                {curand::setseed__name__, curand::setseed, METH_VARARGS, curand::setseed__name__},
-                {curand::gaussian__name__, curand::gaussian, METH_VARARGS, curand::gaussian__name__},
-                {curand::uniform__name__, curand::uniform, METH_VARARGS, curand::uniform__name__},
+                {curand::alloc__name__, curand::alloc, METH_VARARGS, curand::alloc__doc__},
+                {curand::setseed__name__, curand::setseed, METH_VARARGS, curand::setseed__doc__},
+                {curand::gaussian__name__, curand::gaussian, METH_VARARGS, curand::gaussian__doc__},
+                {curand::uniform__name__, curand::uniform, METH_VARARGS, curand::uniform__doc__},
 
-                // cublas 
+                // cublas
                 {cublas::registerExceptions__name__, cublas::registerExceptions, METH_VARARGS, cublas::registerExceptions__doc__},
-                {cublas::alloc__name__, cublas::alloc, METH_VARARGS, cublas::alloc__name__},
-                {cublas::axpy__name__, cublas::axpy, METH_VARARGS, cublas::axpy__name__},
-                {cublas::nrm2__name__, cublas::nrm2, METH_VARARGS, cublas::nrm2__name__},
-                {cublas::trmv__name__, cublas::trmv, METH_VARARGS, cublas::trmv__name__},
-                {cublas::trmm__name__, cublas::trmm, METH_VARARGS, cublas::trmm__name__},
-                {cublas::gemm__name__, cublas::gemm, METH_VARARGS, cublas::gemm__name__},
-                {cublas::symv__name__, cublas::symv, METH_VARARGS, cublas::symv__name__},
-                {cublas::syr__name__, cublas::syr, METH_VARARGS, cublas::syr__name__},
-                        
+                {cublas::alloc__name__, cublas::alloc, METH_VARARGS, cublas::alloc__doc__},
+                {cublas::axpy__name__, cublas::axpy, METH_VARARGS, cublas::axpy__doc__},
+                {cublas::nrm2__name__, cublas::nrm2, METH_VARARGS, cublas::nrm2__doc__},
+                {cublas::trmv__name__, cublas::trmv, METH_VARARGS, cublas::trmv__doc__},
+                {cublas::trmm__name__, cublas::trmm, METH_VARARGS, cublas::trmm__doc__},
+                {cublas::gemm__name__, cublas::gemm, METH_VARARGS, cublas::gemm__doc__},
+                {cublas::symv__name__, cublas::symv, METH_VARARGS, cublas::symv__doc__},
+                {cublas::syr__name__, cublas::syr, METH_VARARGS, cublas::syr__doc__},
+
+                // cusolver
+                {cusolverDn::cusolverDnCreate__name__, cusolverDn::cusolverDnCreate, METH_VARARGS, cusolverDn::cusolverDnCreate__doc__},
+                {cusolverDn::cusolverDnSetStream__name__, cusolverDn::cusolverDnSetStream, METH_VARARGS, cusolverDn::cusolverDnSetStream__doc__},
+
                 // stream
                 {stream::alloc__name__, stream::alloc, METH_VARARGS, stream::alloc__name__},
 
@@ -181,7 +187,7 @@ PyInit_cuda()
 
     //pyre::extensions::cuda::curand::PyCurandErr = PyErr_NewException("CURANDError", NULL, NULL);
     //Py_INCREF(pyre::extensions::cuda::curand::PyCurandErr);
-    //PyModule_AddObject(module, "error", pyre::extensions::cuda::curand::PyCurandErr);  
+    //PyModule_AddObject(module, "error", pyre::extensions::cuda::curand::PyCurandErr);
 
     // and return the newly created module
     return module;

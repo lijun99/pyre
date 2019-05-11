@@ -1,10 +1,9 @@
 # -*- Makefile -*-
 # -*- coding: utf-8 -*-
 #
-# michael a.g. aïvázis
-# orthologue
 # (c) 1998-2019 all rights reserved
 #
+# Author(s): Lijun Zhu
 
 # get the machinery for building shared objects
 include shared/target.def
@@ -17,7 +16,7 @@ include pyre.def
 PACKAGE = cuda
 # the sources
 PROJ_SRCS = \
-    cutimer.cu \
+    timer.cu \
     elementwise.cu \
     linalg.cu \
     matrixops.cu \
@@ -43,12 +42,13 @@ EXPORT_HEADERS = \
     cuda.h \
 # headers scoped by the package name
 EXPORT_PKG_HEADERS = \
-    cuerror.h \
-    cuhelper.h \
-    cutimer.h \
+    debug.h \
+    error.h \
+    helper.h \
+    timer.h \
     cudalib.h \
-    cuvector.h \
-    cumatrix.h \
+    cuda_vector.h \
+    cuda_matrix.h \
     elementwise.h \
     linalg.h \
     matrixops.h \

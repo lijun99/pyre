@@ -29,7 +29,15 @@ namespace pyre {
             namespace curand {
                 const char * const capsule_t = "curand.generator";
             }
-            
+
+            namespace cusolverDn {
+                const char * const capsule_t = "cusolverDn.handle";
+            }
+
+            namespace cufft {
+                const char * const capsule_t = "cufft.plan";
+            }
+
             namespace stream {
                const char * const capsule_t = "cuda.stream";
             }
@@ -37,7 +45,7 @@ namespace pyre {
             namespace timer {
                 const char * const capsule_t = "cuda.timer";
             }
-            
+
 
         } // of namespace cuda
     } // of namespace extensions

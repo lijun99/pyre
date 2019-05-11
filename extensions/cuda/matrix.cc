@@ -26,7 +26,7 @@
 // allocate a gpu matrix
 const char * const pyre::extensions::cuda::matrix::alloc__name__ = "matrix_alloc";
 const char * const pyre::extensions::cuda::matrix::alloc__doc__ = "allocate a matrix on gpu";
-                  
+
 PyObject *
 pyre::extensions::cuda::matrix::
 alloc(PyObject *, PyObject *args)
@@ -38,10 +38,10 @@ alloc(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "(kk)ki:alloc", &size1, &size2, &nbytes, &dtype)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cuda.matrix_alloc"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cuda.matrix_alloc");
         return nullptr;
     }
-    
+
     // declare a cuda matrix
     cuda_matrix *cmatrix= new cuda_matrix{size1, size2, size1*size2, nullptr, nbytes, dtype};
 
@@ -62,10 +62,10 @@ free(PyObject * capsule)
     // get the matrix
     cuda_matrix * cmatrix =
         static_cast<cuda_matrix *>(PyCapsule_GetPointer(capsule, pyre::extensions::cuda::matrix::capsule_t));
-    
+
     // deallocate
     if(!cmatrix->data)
-       cudaSafeCall(cudaFree(cmatrix->data)); 
+       cudaSafeCall(cudaFree(cmatrix->data));
     // and return
     return;
 }
@@ -361,7 +361,7 @@ copytile(PyObject *, PyObject * args) {
 /*
 template<typename Tout, typename Tin>
 void cudalib::matrix::
-copy_tile(Tout* const odata,  const size_t ldo, 
+copy_tile(Tout* const odata,  const size_t ldo,
                 const size_t omstart, const size_t onstart, // starting position of odata
                 const Tin* const idata, const size_t ldi,
                 const size_t imstart, const size_t instart, // starting position of idata
@@ -387,7 +387,7 @@ copy_tile(Tout* const odata,  const size_t ldo,
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;
     } //end of switch
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
@@ -404,7 +404,7 @@ copycols(PyObject *, PyObject * args) {
     PyObject * srcObj;
     PyObject * dstObj;
     size_t rows, cols;
-    PyObject * idxObj;    
+    PyObject * idxObj;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
                                   args, "O!O!(kk)O!:matrix_copycols",
@@ -442,7 +442,7 @@ copycols(PyObject *, PyObject * args) {
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;
     } //end of switch
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
@@ -482,11 +482,11 @@ duplicate_vector(PyObject *, PyObject * args) {
     /*
     template<typename T>
     void cudalib::matrix::
-    duplicate_vector(T* const odata,  const size_t ldo, 
+    duplicate_vector(T* const odata,  const size_t ldo,
                 const T* const idata, const size_t incx,
                 const size_t m, const size_t n, // tile to be copied
                 cudaStream_t stream)
-    */ 
+    */
     switch(src->dtype) {
     case PYCUDA_FLOAT:
         cudalib::matrix::duplicate_vector<float>((float * const)dst->data, dst->size2,
@@ -502,7 +502,7 @@ duplicate_vector(PyObject *, PyObject * args) {
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;
     } //end of switch
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
@@ -552,13 +552,13 @@ transpose(PyObject *, PyObject * args) {
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;
     } //end of switch
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-// inverse by LU 
+// inverse by LU
 const char * const pyre::extensions::cuda::matrix::inverse__name__ = "matrix_inverse";
 const char * const pyre::extensions::cuda::matrix::inverse__doc__ = "matrix inverse";
 
@@ -575,7 +575,7 @@ inverse(PyObject *, PyObject * args) {
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
         return 0;
     }
@@ -592,10 +592,61 @@ inverse(PyObject *, PyObject * args) {
     // perform inverse
     switch(m->dtype) {
     case PYCUDA_DOUBLE: //double
-        cudalib::linalg::inverse_cublas<double>(handle, (double *)m->data, n);
+        cudalib::linalg::inverse_lu_cublas<double>(handle, (double *)m->data, n);
         break;
     case PYCUDA_FLOAT: //single
-        cudalib::linalg::inverse_cublas<float>(handle, (float *)m->data, n);
+        cudalib::linalg::inverse_lu_cublas<float>(handle, (float *)m->data, n);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
+        return 0;
+    }
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+// inverse by LU
+const char * const pyre::extensions::cuda::matrix::inverse_lu_cusolver__name__ = "matrix_inverse_lu_cusolver";
+const char * const pyre::extensions::cuda::matrix::inverse_lu_cusolver__doc__ = "matrix inverse with cusolver lu";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+inverse_lu_cusolver(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * matrixCapsule;
+    PyObject * cusolverCapsule;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!:matrix_inverse_lu",
+                                  &PyCapsule_Type, &cusolverCapsule,
+                                  &PyCapsule_Type, &matrixCapsule);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return 0;
+    }
+    if (!PyCapsule_IsValid(cusolverCapsule, pyre::extensions::cuda::cusolverDn::capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cusolverDn handle capsule");
+        return 0;
+    }
+
+    // get the two matrixs
+    cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
+    cusolverDnHandle_t handle = static_cast<cusolverDnHandle_t>(PyCapsule_GetPointer(cusolverCapsule,
+        pyre::extensions::cuda::cusolverDn::capsule_t));
+
+    const size_t n = m->size1;
+    // perform inverse
+    switch(m->dtype) {
+    case PYCUDA_DOUBLE: //double
+        cudalib::linalg::inverse_lu_cusolver<double>(handle, (double *)m->data, n);
+        break;
+    case PYCUDA_FLOAT: //single
+        cudalib::linalg::inverse_lu_cusolver<float>(handle, (float *)m->data, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
@@ -608,39 +659,47 @@ inverse(PyObject *, PyObject * args) {
 }
 
 // inverse by cholesky
-const char * const pyre::extensions::cuda::matrix::inverse_symm__name__ = "matrix_inverse_symm";
-const char * const pyre::extensions::cuda::matrix::inverse_symm__doc__ = "matrix inverse for symmetric";
+const char * const pyre::extensions::cuda::matrix::inverse_cholesky__name__ = "matrix_inverse_cholesky";
+const char * const pyre::extensions::cuda::matrix::inverse_cholesky__doc__ = "matrix inverse for symmetric positive definite matrices";
 
 PyObject *
 pyre::extensions::cuda::matrix::
-inverse_symm(PyObject *, PyObject * args) {
+inverse_cholesky(PyObject *, PyObject * args) {
     // the arguments
     PyObject * matrixCapsule;
+    PyObject * cusolverCapsule;
     int Uplo;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!i:matrix_inverse_symm",
+                                  args, "O!O!i:matrix_inverse_symm",
+                                  &PyCapsule_Type, &cusolverCapsule,
                                   &PyCapsule_Type, &matrixCapsule, &Uplo);
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return 0;
+    }
+    if (!PyCapsule_IsValid(cusolverCapsule, pyre::extensions::cuda::cusolverDn::capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cusolverDn handle capsule");
         return 0;
     }
 
     // get the two matrixs
     cuda_matrix * mat = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
+    cusolverDnHandle_t handle = static_cast<cusolverDnHandle_t>(PyCapsule_GetPointer(cusolverCapsule,
+            pyre::extensions::cuda::cusolverDn::capsule_t));
     cublasFillMode_t uplo = (cublasFillMode_t)Uplo;
 
     const size_t n = mat->size1;
     // perform inverse
     switch(mat->dtype) {
     case PYCUDA_DOUBLE: //double
-        cudalib::linalg::inverse_symm_D((double *)mat->data, uplo, n);
+        cudalib::linalg::inverse_cholesky<double>(handle, (double * const)mat->data, uplo, n);
         break;
     case PYCUDA_FLOAT: //single
-        cudalib::linalg::inverse_symm_S((float *)mat->data, uplo, n);
+        cudalib::linalg::inverse_cholesky<float>(handle, (float * const)mat->data, uplo, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
@@ -661,32 +720,39 @@ pyre::extensions::cuda::matrix::
 cholesky(PyObject *, PyObject * args) {
     // the arguments
     PyObject * matrixCapsule;
+    PyObject * cusolverCapsule;
     int UpLo;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!i:matrix_cholesky",
+                                  args, "O!O!i:matrix_cholesky",
+                                  &PyCapsule_Type, &cusolverCapsule,
                                   &PyCapsule_Type, &matrixCapsule, &UpLo);
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
         return 0;
     }
-    
+    if (!PyCapsule_IsValid(cusolverCapsule, pyre::extensions::cuda::cusolverDn::capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cusolverDn handle capsule");
+        return 0;
+    }
 
     // get the two matrixs
     cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
+    cusolverDnHandle_t handle = static_cast<cusolverDnHandle_t>(PyCapsule_GetPointer(cusolverCapsule,
+            pyre::extensions::cuda::cusolverDn::capsule_t));
     cublasFillMode_t uplo = (cublasFillMode_t)UpLo;
-    
+
     const size_t n = m->size1;
     // perform cholesky
     switch(m->dtype) {
     case PYCUDA_DOUBLE: //double
-        cudalib::linalg::cholesky<double>((double *)m->data, uplo, n);
+        cudalib::linalg::cholesky<double>(handle, (double * const)m->data, uplo, n);
         break;
     case PYCUDA_FLOAT: //single
-        cudalib::linalg::cholesky<float>((float *)m->data, uplo, n);
+        cudalib::linalg::cholesky<float>(handle, (float * const)m->data, uplo, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
@@ -716,30 +782,30 @@ determinant_triangular(PyObject *, PyObject * args) {
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
         return 0;
     }
-    
+
 
     // get the two matrixs
     cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
-    
+
     const size_t n = m->size1;
     // perform determinant_triangular
     switch(m->dtype) {
     case PYCUDA_DOUBLE: //double
-        det= cudalib::linalg::determinant_triangular<double>((double *)m->data, n);
+        det= cudalib::linalg::determinant_triangular<double>((const double * const)m->data, n);
         break;
     case PYCUDA_FLOAT: //single
-        det = (double) cudalib::linalg::determinant_triangular<float>((float *)m->data, n);
+        det = (double) cudalib::linalg::determinant_triangular<float>((const float * const)m->data, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
         return 0;
     }
 
-    // return 
+    // return
     return PyFloat_FromDouble(det);
 }
 
@@ -761,30 +827,30 @@ logdet_triangular(PyObject *, PyObject * args) {
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
         return 0;
     }
-    
+
 
     // get the two matrixs
     cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
-    
+
     const size_t n = m->size1;
     // perform logdet_triangular
     switch(m->dtype) {
     case PYCUDA_DOUBLE: //double
-        det= cudalib::linalg::logdet_triangular<double>((double *)m->data, n);
+        det= cudalib::linalg::logdet_triangular<double>((const double * const )m->data, n);
         break;
     case PYCUDA_FLOAT: //single
-        det = (double) cudalib::linalg::logdet_triangular<float>((float *)m->data, n);
+        det = (double) cudalib::linalg::logdet_triangular<float>((const float * const)m->data, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
         return 0;
     }
 
-    // return 
+    // return
     return PyFloat_FromDouble(det);
 }
 
@@ -806,30 +872,34 @@ determinant(PyObject *, PyObject * args) {
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
-    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){ 
+    if (!PyCapsule_IsValid(matrixCapsule, capsule_t)){
         PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
         return 0;
     }
-    
 
-    // get the two matrixs
+
+    // get the matrix
     cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(matrixCapsule, capsule_t));
-    
+
+    // create a handle
+    cusolverDnHandle_t handle;
+    cusolverSafeCall(cusolverDnCreate(&handle));
+
     const size_t n = m->size1;
     // perform determinant
     switch(m->dtype) {
     case PYCUDA_DOUBLE: //double
-        det= (double)cudalib::linalg::determinant<double>((double *)m->data, n);
+        det= cudalib::linalg::determinant_cusolver<double>(handle, (double * const)m->data, n);
         break;
     case PYCUDA_FLOAT: //single
-        det = cudalib::linalg::determinant<float>((float *)m->data, n);
+        det = (double)cudalib::linalg::determinant_cusolver<float>(handle, (float * const)m->data, n);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "wrong matrix data type");
         return 0;
     }
 
-    // return 
+    // return
     return PyFloat_FromDouble(det);
 }
 // end of file
