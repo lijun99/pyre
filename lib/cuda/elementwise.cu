@@ -11,7 +11,7 @@
 // cuda utitlies
 #include "cudalib.h"
 
-// define all cuda kernels 
+// define all cuda kernels
 namespace elementwise_kernels {
     template<typename T>
     __global__ void _fill(T *array, const size_t n, const T value);
@@ -26,7 +26,13 @@ namespace elementwise_kernels {
     __global__ void _isub(T *a1, const T *a2, const size_t n);
 
     template<typename T>
-    __global__ void _imul(T *a1, const T a2, const size_t n);
+    __global__ void _imul(T *a1, const T *a2, const size_t n);
+
+    template<typename T>
+    __global__ void _iadd_scalar(T *a1, const T a2, const size_t n);
+
+    template<typename T>
+    __global__ void _imul_scalar(T *a1, const T a2, const size_t n);
 
 } // of namespace elementwise_kernels
 
@@ -41,9 +47,9 @@ fill(T *array, const size_t n, const T value, cudaStream_t stream)
     elementwise_kernels::_fill<T><<<gridSize, blockSize, 0, stream>>>
         (array, n, value);
     cudaCheckError("cuda error: cudalib::elementwise::set_value");
-} 
+}
 
-// explicit specialization
+// explicit instantiation
 template void cudalib::elementwise::fill<double>(double *, const size_t, const double, cudaStream_t);
 template void cudalib::elementwise::fill<float>(float *, const size_t, const float, cudaStream_t);
 template void cudalib::elementwise::fill<int>(int *, const size_t, const int, cudaStream_t);
@@ -60,9 +66,9 @@ conversion(T1 *out, const T2 *in, const size_t n, cudaStream_t stream)
     elementwise_kernels::_conversion<T1, T2><<<gridSize, blockSize, 0, stream>>>
         (out, in, n);
     cudaCheckError("cuda error: cudalib::elementwise::conversion");
-} 
+}
 
-// explicit specialization
+// explicit instantiation
 template void cudalib::elementwise::conversion<float, double>(float *, const double *, const size_t, cudaStream_t);
 template void cudalib::elementwise::conversion<double, float>(double *, const float *, const size_t, cudaStream_t);
 
@@ -77,9 +83,9 @@ iadd(T *a1, const T *a2, const size_t n, cudaStream_t stream)
     elementwise_kernels::_iadd<T><<<gridSize, blockSize, 0, stream>>>
         (a1, a2, n);
     cudaCheckError("cuda error: cudalib::elementwise::iadd");
-} 
+}
 
-// explicit specialization
+// explicit instantiation
 template void cudalib::elementwise::iadd<float>(float *, const float *, const size_t, cudaStream_t);
 template void cudalib::elementwise::iadd<double>(double *, const double *, const size_t, cudaStream_t);
 template void cudalib::elementwise::iadd<int>(int *, const int *, const size_t, cudaStream_t);
@@ -97,32 +103,74 @@ isub(T *a1, const T *a2, const size_t n, cudaStream_t stream)
     elementwise_kernels::_isub<T><<<gridSize, blockSize, 0, stream>>>
         (a1, a2, n);
     cudaCheckError("cuda error: cudalib::elementwise::isub");
-} 
+}
 
-// explicit specialization
+// explicit instantiation
 template void cudalib::elementwise::isub<float>(float *, const float *, const size_t, cudaStream_t);
 template void cudalib::elementwise::isub<double>(double *, const double *, const size_t, cudaStream_t);
 template void cudalib::elementwise::isub<int>(int *, const int *, const size_t, cudaStream_t);
 template void cudalib::elementwise::isub<long>(long *, const long *, const size_t, cudaStream_t);
 
-// a1*=a2
+
+// element multiplication a1 *= a2
+
 template <typename T>
 void
 cudalib::elementwise::
-imul(T *a1, const T a2, const size_t n, cudaStream_t stream)
+imul(T *a1, const T *a2, const size_t n, cudaStream_t stream)
 {
     dim3 blockSize = NTHREADS;
     dim3 gridSize = IDIVUP(n, NTHREADS);
     elementwise_kernels::_imul<T><<<gridSize, blockSize, 0, stream>>>
         (a1, a2, n);
     cudaCheckError("cuda error: cudalib::elementwise::imul");
-} 
+}
 
-// explicit specialization
-template void cudalib::elementwise::imul<float>(float *, const float, const size_t, cudaStream_t);
-template void cudalib::elementwise::imul<double>(double *, const double, const size_t, cudaStream_t);
-template void cudalib::elementwise::imul<int>(int *, const int, const size_t, cudaStream_t);
-template void cudalib::elementwise::imul<long>(long *, const long, const size_t, cudaStream_t);
+// explicit instantiation
+template void cudalib::elementwise::imul<float>(float *, const float *, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul<double>(double *, const double *, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul<int>(int *, const int *, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul<long>(long *, const long *, const size_t, cudaStream_t);
+
+
+// a1+=a2
+template <typename T>
+void
+cudalib::elementwise::
+iadd_scalar(T *a1, const T a2, const size_t n, cudaStream_t stream)
+{
+    dim3 blockSize = NTHREADS;
+    dim3 gridSize = IDIVUP(n, NTHREADS);
+    elementwise_kernels::_iadd_scalar<T><<<gridSize, blockSize, 0, stream>>>
+        (a1, a2, n);
+    cudaCheckError("cuda error: cudalib::elementwise::iadd_scalar");
+}
+
+// explicit instantiation
+template void cudalib::elementwise::iadd_scalar<float>(float *, const float, const size_t, cudaStream_t);
+template void cudalib::elementwise::iadd_scalar<double>(double *, const double, const size_t, cudaStream_t);
+template void cudalib::elementwise::iadd_scalar<int>(int *, const int, const size_t, cudaStream_t);
+template void cudalib::elementwise::iadd_scalar<long>(long *, const long, const size_t, cudaStream_t);
+
+
+// a1*=a2
+template <typename T>
+void
+cudalib::elementwise::
+imul_scalar(T *a1, const T a2, const size_t n, cudaStream_t stream)
+{
+    dim3 blockSize = NTHREADS;
+    dim3 gridSize = IDIVUP(n, NTHREADS);
+    elementwise_kernels::_imul_scalar<T><<<gridSize, blockSize, 0, stream>>>
+        (a1, a2, n);
+    cudaCheckError("cuda error: cudalib::elementwise::imul_scalar");
+}
+
+// explicit instantiation
+template void cudalib::elementwise::imul_scalar<float>(float *, const float, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul_scalar<double>(double *, const double, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul_scalar<int>(int *, const int, const size_t, cudaStream_t);
+template void cudalib::elementwise::imul_scalar<long>(long *, const long, const size_t, cudaStream_t);
 
 // cuda kernel for set initial values
 template<typename T>
@@ -166,7 +214,25 @@ void elementwise_kernels::_isub(T *a1, const T *a2, const size_t n)
 
 template<typename T>
 __global__
-void elementwise_kernels::_imul(T *a1, const T a2, const size_t n)
+void elementwise_kernels::_imul(T *a1, const T *a2, const size_t n)
+{
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n)
+        a1[idx] *= a2[idx];
+}
+
+template<typename T>
+__global__
+void elementwise_kernels::_iadd_scalar(T *a1, const T a2, const size_t n)
+{
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n)
+        a1[idx] += a2;
+}
+
+template<typename T>
+__global__
+void elementwise_kernels::_imul_scalar(T *a1, const T a2, const size_t n)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx < n)

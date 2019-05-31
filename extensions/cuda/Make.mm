@@ -38,6 +38,7 @@ PROJ_SRCS = \
     cusolver.cc \
     stream.cc \
     timer.cc \
+    stats.cc \
 
 # actions
 export:: export-headers

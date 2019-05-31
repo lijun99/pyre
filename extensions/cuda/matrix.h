@@ -9,6 +9,8 @@
 #if !defined(pyre_extensions_cuda_matrix_h)
 #define pyre_extensions_cuda_matrix_h
 
+#include <pyre/cuda/cuda_matrix.h>
+
 // place everything in my private namespace
 namespace pyre {
     namespace extensions {
@@ -22,6 +24,9 @@ namespace pyre {
 
                   // free
                   void free(PyObject *);
+
+                  // converter
+                  int converter(PyObject *, cuda_matrix **);
 
                   // set_zero
                   extern const char * const zero__name__;
@@ -48,6 +53,16 @@ namespace pyre {
                   extern const char * const imul__doc__;
                   PyObject * imul(PyObject *, PyObject *);
 
+                  // iadd_scalar
+                  extern const char * const iadd_scalar__name__;
+                  extern const char * const iadd_scalar__doc__;
+                  PyObject * iadd_scalar(PyObject *, PyObject *);
+
+                  // imul_scalar
+                  extern const char * const imul_scalar__name__;
+                  extern const char * const imul_scalar__doc__;
+                  PyObject * imul_scalar(PyObject *, PyObject *);
+
                   // copy
                   extern const char * const copy__name__;
                   extern const char * const copy__doc__;
@@ -68,10 +83,20 @@ namespace pyre {
                   extern const char * const duplicate_vector__doc__;
                   PyObject * duplicate_vector(PyObject *, PyObject *);
 
+                  // copy to vector
+                  extern const char * const tovector__name__;
+                  extern const char * const tovector__doc__;
+                  PyObject * tovector(PyObject *, PyObject *);
+
                   // transpose
                   extern const char * const transpose__name__;
                   extern const char * const transpose__doc__;
                   PyObject * transpose(PyObject *, PyObject *);
+
+                  // copy_triangle
+                  extern const char * const copy_triangle__name__;
+                  extern const char * const copy_triangle__doc__;
+                  PyObject * copy_triangle(PyObject *, PyObject *);
 
                   // inverse
                   extern const char * const inverse__name__;

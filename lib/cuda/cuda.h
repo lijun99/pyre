@@ -20,6 +20,7 @@
 #include <pyre/cuda/elementwise.h>
 #include <pyre/cuda/matrixops.h>
 #include <pyre/cuda/linalg.h>
+#include <pyre/cuda/statistics.h>
 
 #endif //pyre_cuda_h
 // end of file

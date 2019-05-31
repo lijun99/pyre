@@ -13,8 +13,8 @@ def test():
     """
     Test Cholesky/trmm/inverse/gemm
     """
-    samples = 10
-    parameters = 20
+    samples = 100
+    parameters = 2048
 
     precision = 'float32' # or 'float64'
     #### GSL ####
@@ -23,15 +23,15 @@ def test():
     sigma = gsl.matrix(shape=(parameters, parameters))
     for i in range(parameters):
         for j in range(parameters):
-            sigma[i,j] = 1 if i==j else (i+1)*(j+1)*0.001
+            sigma[i,j] = 1 if i==j else (i+1)*(j+1)*0.001/(samples*samples)
 
-    
+
 
     # cholesky factorization
     sigma_chol = sigma.clone()
     sigma_chol = gsl.linalg.cholesky_decomposition(sigma_chol)
 
-    # create random gaussian samples 
+    # create random gaussian samples
     rng = gsl.rng()
     gaussian = gsl.pdf.gaussian(0, 1, rng)
     random = gsl.matrix(shape=(samples, parameters))
@@ -46,73 +46,67 @@ def test():
     #gsl_blas_TYPEtrmm(CblasRight, CblasUpper, CblasNoTrans, CblasNonUnit, 1, chol, delta);
 
     # gemm
-    product = gsl.matrix(shape =(samples, parameters)) 
-    gsl.blas.dgemm(0, 0, 1.0, random, sigma, 0, product) 
-    
+    product = gsl.matrix(shape =(samples, parameters))
+    gsl.blas.dgemm(0, 0, 1.0, random, sigma, 0, product)
+
     # inverse
     sigma_inv = sigma.clone()
     lu = gsl.linalg.LU_decomposition(sigma_inv)
     sigma_inv = gsl.linalg.LU_invert(*lu)
-    
+
 
     ##### CUDA ######
     device = cuda.manager.device(0)
-    
+
     # copy sigma from cpu to hgpu
     dsigma = cuda.matrix(source=sigma, dtype=precision)
 
-    # Cholesky    
+    # Cholesky
     dsigma_chol = dsigma.clone()
     dsigma_chol = dsigma_chol.Cholesky(uplo=cuda.cublas.FillModeUpper)
 
-    # trmm 
+    # trmm
     djump = cuda.matrix(source=random, dtype=precision)
     drandom = cuda.matrix(source=random, dtype=precision)
     djump = cuda.cublas.trmm(dsigma_chol, djump, out=djump, uplo=cuda.cublas.FillModeUpper, side=cuda.cublas.SideRight)
 
     # gemm
     dproduct = cuda.cublas.gemm(drandom, dsigma)
-    
+
     # inverse
     dsigma_inv = dsigma.clone()
-    dsigma_inv.inverse() 
+    dsigma_inv.inverse()
 
 
     ### compare ####
-    print("compare cpu and gpu results")
-    print("input sigma")
-    sigma.print()
-    dsigma.print()
-    
-    print("cholesky (GPU only stores upper)")
-    sigma_chol.print()
-    dsigma_chol.print()
+    print("Copying between cpu and gpu, maxerror: ",
+        cuda.stats.max_diff(dsigma, cuda.matrix(source=sigma, dtype=precision)))
 
-    #random
-    print("random")
-    random.print()
-    drandom.print()
+    dsigma_chol.copy_triangle(fill=1)
+    print("Cholesky factorization, max difference between cpu/gpu results: ",
+          cuda.stats.max_diff(dsigma_chol, cuda.matrix(source=sigma_chol, dtype=precision)))
 
-    print("trmm")
-    jump.print()
-    djump.print()
+    print("trmm, max difference between cpu/gpu results: ",
+          cuda.stats.max_diff(djump, cuda.matrix(source=jump, dtype=precision)))
 
-    print("gemm")
-    product.print()
-    dproduct.print()
+    print("gemm, max difference between cpu/gpu results: ",
+          cuda.stats.max_diff(dproduct, cuda.matrix(source=product, dtype=precision)))
 
-    print("inverse")
-    sigma_inv.print()
-    dsigma_inv.print()
+    print("matrix inverse, max difference between cpu/gpu results: ",
+          cuda.stats.max_diff(dsigma_inv, cuda.matrix(source=sigma_inv, dtype=precision)))
 
-    print("determinant")
-    lu = gsl.linalg.LU_decomposition(sigma_inv)
+
+    # determinant
+    lu = gsl.linalg.LU_decomposition(sigma)
     det =  gsl.linalg.LU_det(*lu)
-    print(det)
-    print(dsigma_inv.determinant())
+    gdet = dsigma.determinant(triangular=False)
+    print("matrix determinant, (relative) difference between cpu/gpu results: ", abs(gdet/det-1))
+    glogdet = dsigma.log_det()
+    logdet = gsl.linalg.LU_lndet(*lu)
+    print("matrix log determinant, relative difference between cpu/gpu results: ", abs(glogdet/logdet-1), gdet, det)
 
     return
-    
+
 test()
 
 # end of file

@@ -31,6 +31,9 @@ namespace matrixops_kernels {
     __global__ void _duplicate_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t m, const size_t n);
 
+    template<typename T>
+    __global__ void _copy_triangle(T * const gdata, const size_t n, const int fill);
+
 } // of namespace matrixops_kernels
 
 // identity matrix
@@ -80,28 +83,7 @@ template void cudalib::matrix::copy_tile<float, double>(float * const, const siz
 template void cudalib::matrix::copy_tile<double, float>(double * const, const size_t, const size_t, const size_t,
     const float * const, const size_t, const size_t, const size_t, const size_t, const size_t, cudaStream_t);
 
-// set diagonal elements for identity matrix
-template<typename T>
-__global__ void
-matrixops_kernels::_identity(T * const mat,  const size_t n)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if(i < n)
-        mat[IDX2R(i, i, n)] = (T)1.0f;
-}
 
-// To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
-// copy rows x cols from idata to odata
-template<typename Tout, typename Tin>
-__global__ void
-matrixops_kernels::_copy_tile(Tout * const odata,  const size_t ldo,
-                const Tin * const idata, const size_t ldi, const size_t m, const size_t n)
-{
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < n && y < m)
-        odata[IDX2R(y, x, ldo)] = (Tout)idata[IDX2R(y, x, ldi)];
-}
 
 // copy data according to a list of indices
 // i.e., odata[x,y] = idata[x, indices[y]]
@@ -126,21 +108,7 @@ template void cudalib::matrix::copy_indices<float>(float * const, const size_t,
 template void cudalib::matrix::copy_indices<double>(double * const, const size_t,
     const double * const, const size_t, const size_t, const size_t, const size_t * const, cudaStream_t);
 
-// To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
-// copy rows x cols from idata to odata
-//
-template<typename T>
-__global__ void
-matrixops_kernels::_copy_indices(T * const odata,  const size_t ldo,
-                const T * const idata, const size_t ldi, const size_t m, const size_t n, const size_t * const indices)
-{
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < n && y < m) {
-        int index = indices[x];
-        odata[y*ldo + x] = idata[y*ldi+index];
-    }
-}
+
 
 // matrix transpose with shared mem, unrolling and memory padding algorithm
 // idata a matrix (iM x iN) with leading dimension iN
@@ -164,6 +132,91 @@ transpose(T * const odata, const T* const idata, const size_t iM, const size_t i
 template void cudalib::matrix::transpose<float>(float * const, const float *, const size_t, const size_t, cudaStream_t);
 template void cudalib::matrix::transpose<double>(double * const, const double *, const size_t, const size_t, cudaStream_t);
 template void cudalib::matrix::transpose<int>(int * const, const int *, const size_t, const size_t, cudaStream_t);
+
+
+
+// duplicate a vector to multiple rows of a matrix
+template<typename T>
+void cudalib::matrix::
+duplicate_vector(T* const odata,  const size_t ldo,
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n, // tile to be copied
+                cudaStream_t stream)
+{
+    // move input data pointer to the starting corner
+    dim3 blockSize(16, 16, 1); // typically (16x16x1)
+    dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y), 1);
+    matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
+        (odata, ldo, idata, incx, m, n);
+    cudaCheckError("matrixops_kernels::_duplicate_vector");
+}
+
+// explicit instantiation for shared library
+template void cudalib::matrix::duplicate_vector<float>(float * const, const size_t,
+    const float * const, const size_t, const size_t, const size_t, cudaStream_t);
+template void cudalib::matrix::duplicate_vector<double>(double * const, const size_t,
+    const double * const, const size_t, const size_t, const size_t, cudaStream_t);
+
+
+// duplicate the upper triangle to lower or vice versa for a nxn matrix
+// fill = 0, the lower is filled, copy to upper
+// fill = 1, the upper is filled, copy to lower
+template<typename T>
+void cudalib::matrix::
+copy_triangle(T* const gdata, const size_t n, const int fill, cudaStream_t stream)
+{
+    int blockSize = BLOCKDIM;
+    int elements = n*(n-1)/2;
+    int gridSize = IDIVUP(elements, blockSize);
+    matrixops_kernels::_copy_triangle<T><<<gridSize, blockSize, 0, stream>>>
+        (gdata, n, fill);
+    cudaCheckError("matrixops_kernels::_copy_triangle");
+}
+
+// explicit instantiation for shared library
+template void cudalib::matrix::copy_triangle<float>(float * const, const size_t, const int, cudaStream_t);
+template void cudalib::matrix::copy_triangle<double>(double * const, const size_t, const int, cudaStream_t);
+
+
+//************** CUDA KERNELS **************
+// set diagonal elements for identity matrix
+template<typename T>
+__global__ void
+matrixops_kernels::_identity(T * const mat,  const size_t n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i < n)
+        mat[IDX2R(i, i, n)] = (T)1.0f;
+}
+
+// To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
+// copy rows x cols from idata to odata
+template<typename Tout, typename Tin>
+__global__ void
+matrixops_kernels::_copy_tile(Tout * const odata,  const size_t ldo,
+                const Tin * const idata, const size_t ldi, const size_t m, const size_t n)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if(x < n && y < m)
+        odata[IDX2R(y, x, ldo)] = (Tout)idata[IDX2R(y, x, ldi)];
+}
+
+// To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
+// copy rows x cols from idata to odata
+//
+template<typename T>
+__global__ void
+matrixops_kernels::_copy_indices(T * const odata,  const size_t ldo,
+                const T * const idata, const size_t ldi, const size_t m, const size_t n, const size_t * const indices)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if(x < n && y < m) {
+        int index = indices[x];
+        odata[y*ldo + x] = idata[y*ldi+index];
+    }
+}
 
 // kernel
 template<typename T>
@@ -214,29 +267,6 @@ _transpose(T* const odata, const T* const idata, const size_t nrows, const size_
     }
 }
 
-
-// duplicate a vector to multiple rows of a matrix
-template<typename T>
-void cudalib::matrix::
-duplicate_vector(T* const odata,  const size_t ldo,
-                const T* const idata, const size_t incx,
-                const size_t m, const size_t n, // tile to be copied
-                cudaStream_t stream)
-{
-    // move input data pointer to the starting corner
-    dim3 blockSize(16, 16, 1); // typically (16x16x1)
-    dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y), 1);
-    matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
-        (odata, ldo, idata, incx, m, n);
-    cudaCheckError("matrixops_kernels::_duplicate_vector");
-}
-
-// explicit instantiation for shared library
-template void cudalib::matrix::duplicate_vector<float>(float * const, const size_t,
-    const float * const, const size_t, const size_t, const size_t, cudaStream_t);
-template void cudalib::matrix::duplicate_vector<double>(double * const, const size_t,
-    const double * const, const size_t, const size_t, const size_t, cudaStream_t);
-
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
 // copy rows x cols from idata to odata
 //
@@ -250,6 +280,30 @@ matrixops_kernels::_duplicate_vector(T * const odata,  const size_t ldo,
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     if(x < n && y < m)
         odata[y*ldo + x] = idata[incx*x];
+}
+
+template<typename T>
+__global__ void
+matrixops_kernels::_copy_triangle(T * const gdata, const size_t n, const int fill)
+{
+    // get thread id
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tid >= n*(n-1)/2) return;
+
+    // find the row, col indices
+    bool found = 0;
+    int row = 1;
+    while(!found) {
+        if (tid >= row*(row-1)/2 && tid < row*(row+1)/2) found = 1;
+        else row++;
+    }
+    int col = tid - row*(row-1)/2;
+
+    if (fill == 0) //lower is filled, copy to upper
+        gdata[IDX2R(col, row, n)] = gdata[IDX2R(row, col, n)];
+    else // upper is filled, copy to lower
+        gdata[IDX2R(row, col, n)] = gdata[IDX2R(col, row, n)];
+    // all done
 }
 
 // end of file

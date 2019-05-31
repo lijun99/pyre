@@ -25,13 +25,21 @@ namespace cudalib {
         template<typename T>
             void iadd(T *a1, const T* a2, const size_t n, cudaStream_t stream=0);
 
+        // add constant a1 += a2
+        template<typename T>
+            void iadd_scalar(T *a1, const T a2, const size_t n, cudaStream_t stream=0);
+
         // sub a1 -= a2
         template<typename T>
             void isub(T *a1, const T* a2, const size_t n, cudaStream_t stream=0);
 
-        // mul a1 *= a2 (a2 scalar)
+        // mul by elements a1 *= a2
         template<typename T>
-            void imul(T *a1, const T a2, const size_t n, cudaStream_t stream=0);
+            void imul(T *a1, const T * a2, const size_t n, cudaStream_t stream=0);
+
+        // mul a scalar a1 *= a2
+        template<typename T>
+            void imul_scalar(T *a1, const T a2, const size_t n, cudaStream_t stream=0);
 
     } // of namespace elementwise
 } // of namespace cudalib

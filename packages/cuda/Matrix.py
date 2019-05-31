@@ -14,8 +14,28 @@ from . import cuda as libcuda # the extension
 # the class declaration
 class Matrix:
     """
-    Cuda matrix
+    cuda matrix ( a python wrapper for c/c++ cuda_matrix )
+
+    typedef struct {
+        size_t size1; // shape[0]
+        size_t size2; // shape[1]
+        size_t size;  // total size
+        char *data; // pointer to gpu memory
+        size_t nbytes; // total bytes
+        int dtype; // use numpy type_num
+    } cuda_matrix;
+
+    properties:
+        shape[2]: shape (size1, size2)
+        data: PyCapsule for c/c++ cuda_matrix object
+        dtype: data type as in numpy
+        size: shape[0]*shape[1]
     """
+
+    from .Vector import Vector as vector
+
+    # traits
+
 
     # class methods
     def copy_to_host(self, target=None, type='gsl'):
@@ -83,6 +103,34 @@ class Matrix:
     # make an alias of view
     submatrix = view
 
+    def tovector(self, start=(0, 0), size=None, out=None):
+        """
+        view a continuous part or whole matrix as a vector (without data copying)
+        :param start: tuple (row, col) as starting element
+        :param size: number of elements in vector
+        :return: a cuda vector of size size
+        """
+        # get flattened index
+        row, col = start
+        start_index = row * self.shape[1] + col
+        # get the size
+        size = self.size-start_index if size is None else size
+        # create a vector if not pre-allocated
+        out = self.vector(shape=size, dtype=self.dtype)
+        # copy the data
+        libcuda.matrix_tovector(out.data, self.data, start_index, size)
+        # all done
+        return out
+
+    def get_row(self, row=0, out=None):
+        """
+        get a view of one row
+        :param row:
+        :return:
+        """
+        return self.tovector(start=(row, 0), size=self.shape[1], out=out)
+
+
     def insert(self, src, start=(0,0), shape=None):
         """
         insert (copy) a matrix from position start
@@ -117,6 +165,14 @@ class Matrix:
         libcuda.matrix_duplicate_vector(self.data, src.data, size, incx)
         return self
 
+    def copy_triangle(self, fill=1):
+        """
+        for nxn triangular matrix, copy upper triangle (fill=1) to lower, or vice versa(fill=0)
+        :param fill: 0,1 for lower/upper filled matrix
+        :return: self
+        """
+        libcuda.matrix_copy_triangle(self.data, fill)
+        return self
 
     def zero(self):
         """
@@ -138,7 +194,6 @@ class Matrix:
         """
         print(self.copy_to_host(type='numpy'))
         return self
-
 
     def transpose(self, out=None):
         """
@@ -177,7 +232,7 @@ class Matrix:
         Matrix inverse with LU
         :param out: output matrix if different from input
         :param uplo: inverse matrix store mode
-        :return: self or output
+        :return: self or out
         """
         from . import cublas
         from . import cusolverdn
@@ -195,6 +250,9 @@ class Matrix:
     def Cholesky(self, out=None, uplo=1):
         """
         Cholesky decomposition
+        :param out: output matrix
+        :param uplo: store mode for output, 0/1 = lower/upper triangle
+        :return: self or out
         """
         # uplo = 1 for upper
         from . import cublas
@@ -226,6 +284,96 @@ class Matrix:
             det = libcuda.matrix_determinant(copy.data)
         # return
         return det
+
+
+    def log_det(self, triangular=False):
+        """
+        matrix log determinant for real symmetric matrix
+        """
+        if triangular:
+            det = libcuda.matrix_logdet_triangular(self.data)
+        else:
+            # use Cholesky decomposition, so only real symmetric matrix
+            # make a copy as Cholesky changes the matrix
+            copy = self.clone()
+            copy.Cholesky()
+            det = 2.0*libcuda.matrix_logdet_triangular(copy.data)
+        # return
+        return det
+
+    # statistics
+
+    def amin(self):
+        """
+        minimum value
+        """
+        return libcuda.matrix_amin(self.data, self.size, 1)
+
+    def amax(self):
+        """
+        maximum value
+        """
+        return libcuda.matrix_amax(self.data, self.size, 1)
+
+    def mean(self, axis=None, out=None):
+        """
+        mean values along axis=0(row), 1(column), or all elements (None)
+        :param axis: int or None, axis along which the means are computed. None for all elements
+        :param out: output vector for axis=0,1  vector size = columns(axis=0), rows(axis=1)
+        :return:  mean value(s) as a vector for axis=0 or 1, as a float
+        """
+
+        # check axis
+        if axis == 0: # along row
+            # allocate output vector if not present
+            out = self.vector(shape=self.shape[1], dtype=self.dtype) if out is None else out
+            # call cudalib functions
+            libcuda.matrix_mean(self.data, out.data, axis)
+        elif axis == 1: # along column
+            out = self.vector(shape=self.shape[0], dtype=self.dtype)
+            libcuda.matrix_mean(self.data, out.data, axis)
+        else: # over all elements
+            out = libcuda.matrix_mean_flattened(self.data)
+        # all done
+        return out
+
+    def mean_sd(self, axis=0, out=None, ddof=1):
+        """
+        mean and stand deviations along row or column
+        :param axis: int or None, axis along which the means are computed. None for all elements
+        :param out: tuple of two vectors (mean, sd), vector size is 1 (axis=None),  columns(axis=0), rows(axis=1)
+        :param ddof: delta degrees of freedom
+        :return: tuple of two vectors
+        """
+
+        # check axis
+        if axis !=0 and axis !=1:
+            raise IndexError("axis is out of range")
+
+        # allocate output vectors if not present
+        if out is None:
+            # mean, sd over flattened matrix
+            if axis is None:
+                return
+            # to be done
+            # mean, sd along row
+            elif axis == 0:
+                mean = self.vector(shape=self.shape[1], dtype=self.dtype)
+                sd = self.vector(shape=self.shape[1], dtype=self.dtype)
+            # mean, sd along column
+            elif axis == 1:
+                mean = self.vector(shape=self.shape[0], dtype=self.dtype)
+                sd = self.vector(shape=self.shape[0], dtype=self.dtype)
+        else:
+            # use pre-allocated vectors
+            mean, sd = out
+            # assuming correct dimension, skip error checking
+
+        # call cudalib functions
+        libcuda.matrix_mean_std(self.data, mean.data, sd.data, axis, ddof)
+
+        # return (mean, sd)
+        return mean, sd
 
     # meta methods
     def __init__(self, shape=(1,1), source=None, dtype="float64", **kwds):
@@ -265,8 +413,16 @@ class Matrix:
         # all done
         return
 
-    # container support
+    #properties
+    @property
+    def rows(self):
+        return self.shape[0]
 
+    @property
+    def cols(self):
+        return self.shape[1]
+
+    # container support
     # in-place arithmetic
     def __iadd__(self, other):
         """
@@ -275,9 +431,13 @@ class Matrix:
         # if other is a matrix
         if isinstance(other, Matrix):
             libcuda.matrix_iadd(self.data, other.data)
-            return self
-        # otherwise, let the interpreter know
-        raise NotImplemented
+        # or a scalar
+        elif isinstance(other, float) or isinstance(other, int):
+            libcuda.matrix_iadd_scalar(self.data, float(other))
+        else:
+            # otherwise, let the interpreter know
+            raise NotImplemented
+        return self
 
     def __isub__(self, other):
         """
@@ -286,23 +446,30 @@ class Matrix:
         # if other is a matrix
         if isinstance(other, Matrix):
             libcuda.matrix_isub(self.data, other.data)
-            return self
-        # otherwise, let the interpreter know
-        raise NotImplemented
+        # or a scalar
+        elif isinstance(other, float) or isinstance(other, int):
+            libcuda.matrix_isub_scalar(self.data, float(other))
+        else:
+            # otherwise, let the interpreter know
+            raise NotImplemented
+        return self
 
     def __imul__(self, other):
         """
         In-place scale with a factor {other}
         """
         # if other is a matrix
-        if isinstance(other, float) or isinstance(other, int):
-            libcuda.matrix_imul(self.data, float(other))
-            return self
-        # otherwise, let the interpreter know
-        raise NotImplemented
+        if isinstance(other, Matrix):
+            libcuda.matrix_imul(self.data, other.data)
+        # or a scalar
+        elif isinstance(other, float) or isinstance(other, int):
+            libcuda.matrix_imul_scalar(self.data, float(other))
+        else:
+            # otherwise, let the interpreter know
+            raise NotImplemented
+        return self
 
     # private data
     data = None
-
 
 # end of file

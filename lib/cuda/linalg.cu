@@ -322,7 +322,7 @@ int inverse_cholesky<float>(cusolverDnHandle_t solver_handle,
     cudaSafeCall(cudaFree(work));
     cudaSafeCall(cudaFree(work2));
     cudaSafeCall(cudaFree(devInfo));
-    std::cout << "inverse cholesky" << work_size << " " << work_size2 << "\n";
+    //std::cout << "inverse cholesky" << work_size << " " << work_size2 << "\n";
     return info;
 }
 

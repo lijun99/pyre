@@ -18,6 +18,7 @@
 // local support
 #include "exceptions.h"
 #include "dtypes.h"
+#include "vector.h"
 
 // access to cudalib definitions
 #include <pyre/cuda.h>
@@ -70,6 +71,18 @@ free(PyObject * capsule)
     return;
 }
 
+// convert PyCapsule object to c cuda_matrix object
+// to be used with PyArg_Parse ("O&", &converter, &Cobj)
+int
+pyre::extensions::cuda::matrix::
+converter(PyObject * capsule, cuda_matrix **m)
+{
+    *m =  static_cast<cuda_matrix *>(PyCapsule_GetPointer(capsule, capsule_t));
+    if (m != NULL)
+        return 1;
+    else
+        return 0;
+}
 
 // initialization
 const char * const pyre::extensions::cuda::matrix::zero__name__ = "matrix_zero";
@@ -137,7 +150,7 @@ fill(PyObject *, PyObject * args) {
         cudalib::elementwise::fill<long>((long *)m->data, m->size, (long)value);
         break;
     default:
-        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implenmented yet");
+        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implemented yet");
         return 0;
     }
 
@@ -188,7 +201,7 @@ pyre::extensions::cuda::matrix::iadd(PyObject *, PyObject * args) {
         cudalib::elementwise::iadd<long>((long *)m1->data, (long *)m2->data, size);
         break;
     default:
-        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implenmented yet");
+        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implemented yet");
         return 0;
     }
 
@@ -239,7 +252,7 @@ pyre::extensions::cuda::matrix::isub(PyObject *, PyObject * args) {
         cudalib::elementwise::isub<long>((long *)m1->data, (long *)m2->data, size);
         break;
     default:
-        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implenmented yet");
+        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implemented yet");
         return 0;
     }
 
@@ -248,18 +261,70 @@ pyre::extensions::cuda::matrix::isub(PyObject *, PyObject * args) {
     return Py_None;
 }
 
-// a1*=a2 (scalar)
+
 const char * const pyre::extensions::cuda::matrix::imul__name__ = "matrix_imul";
-const char * const pyre::extensions::cuda::matrix::imul__doc__ = "matrix scale";
+const char * const pyre::extensions::cuda::matrix::imul__doc__ = "in-place (element) multiplication of two matrices";
 
 PyObject *
 pyre::extensions::cuda::matrix::imul(PyObject *, PyObject * args) {
     // the arguments
     PyObject * self;
+    PyObject * other;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!:matrix_imul",
+                                  &PyCapsule_Type, &self, &PyCapsule_Type, &other);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(self, capsule_t) || !PyCapsule_IsValid(other, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return 0;
+    }
+
+    // get the two matrixs
+    cuda_matrix * m1 = static_cast<cuda_matrix *>(PyCapsule_GetPointer(self, capsule_t));
+    cuda_matrix * m2 = static_cast<cuda_matrix *>(PyCapsule_GetPointer(other, capsule_t));
+
+    size_t size = m1->size;
+
+    // perform the subtraction
+    switch(m1->dtype) {
+    case PYCUDA_DOUBLE: //double
+        cudalib::elementwise::imul<double>((double *)m1->data, (double *)m2->data, size);
+        break;
+    case PYCUDA_FLOAT: //single
+        cudalib::elementwise::imul<float>((float *)m1->data, (float *)m2->data, size);
+        break;
+    case PYCUDA_INT: // int32
+        cudalib::elementwise::imul<int>((int *)m1->data, (int *)m2->data, size);
+        break;
+    case PYCUDA_LONG: // int64
+        cudalib::elementwise::imul<long>((long *)m1->data, (long *)m2->data, size);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implemented yet");
+        return 0;
+    }
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+// a1+=a2 (scalar)
+const char * const pyre::extensions::cuda::matrix::iadd_scalar__name__ = "matrix_iadd_scalar";
+const char * const pyre::extensions::cuda::matrix::iadd_scalar__doc__ = "add a constant to matrix";
+
+PyObject *
+pyre::extensions::cuda::matrix::iadd_scalar(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * self;
     double other;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!d:matrix_imul",
+                                  args, "O!d:matrix_iadd_scalar",
                                   &PyCapsule_Type, &self, &other);
     // if something went wrong
     if (!status) return 0;
@@ -277,13 +342,63 @@ pyre::extensions::cuda::matrix::imul(PyObject *, PyObject * args) {
     // perform the subtraction
     switch(m1->dtype) {
     case PYCUDA_DOUBLE: //double
-        cudalib::elementwise::imul<double>((double *)m1->data, other, size);
+        cudalib::elementwise::iadd_scalar<double>((double *)m1->data, other, size);
         break;
     case PYCUDA_FLOAT: //single
-        cudalib::elementwise::imul<float>((float *)m1->data, (float)other, size);
+        cudalib::elementwise::iadd_scalar<float>((float *)m1->data, (float)other, size);
+        break;
+    case PYCUDA_INT: // int32
+        cudalib::elementwise::iadd_scalar<int>((int *)m1->data, (int)other, size);
+        break;
+    case PYCUDA_LONG: // int64
+        cudalib::elementwise::iadd_scalar<long>((long *)m1->data, (long)other, size);
         break;
     default:
-        PyErr_SetString(PyExc_TypeError, "types other than float/double are not implenmented yet");
+        PyErr_SetString(PyExc_TypeError, "types other than float/double/int/long are not implemented yet");
+        return 0;
+    }
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+// a1*=a2 (scalar)
+const char * const pyre::extensions::cuda::matrix::imul_scalar__name__ = "matrix_imul_scalar";
+const char * const pyre::extensions::cuda::matrix::imul_scalar__doc__ = "matrix scale";
+
+PyObject *
+pyre::extensions::cuda::matrix::imul_scalar(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * self;
+    double other;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!d:matrix_imul_scalar",
+                                  &PyCapsule_Type, &self, &other);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(self, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return 0;
+    }
+
+    // get the two matrixs
+    cuda_matrix * m1 = static_cast<cuda_matrix *>(PyCapsule_GetPointer(self, capsule_t));
+
+    size_t size = m1->size;
+
+    // perform the subtraction
+    switch(m1->dtype) {
+    case PYCUDA_DOUBLE: //double
+        cudalib::elementwise::imul_scalar<double>((double *)m1->data, other, size);
+        break;
+    case PYCUDA_FLOAT: //single
+        cudalib::elementwise::imul_scalar<float>((float *)m1->data, (float)other, size);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "types other than float/double are not implemented yet");
         return 0;
     }
 
@@ -508,6 +623,44 @@ duplicate_vector(PyObject *, PyObject * args) {
     return Py_None;
 }
 
+// vector_view
+const char * const pyre::extensions::cuda::matrix::tovector__name__ = "matrix_tovector";
+const char * const pyre::extensions::cuda::matrix::tovector__doc__ = "copy part/whole of the matrix to a vector";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+tovector(PyObject *, PyObject *args)
+{
+    // arguments
+    PyObject * vCapsule, *mCapsule;
+    size_t start, n;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(args, "O!O!kk:matrix_tovector",
+                                &PyCapsule_Type, &vCapsule,
+                                &PyCapsule_Type, &mCapsule,
+                                &start, &n);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the capsule is not valid
+    if (!PyCapsule_IsValid(mCapsule, capsule_t)
+        || !(PyCapsule_IsValid(vCapsule, pyre::extensions::cuda::vector::capsule_t)) ) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix/vector capsule");
+        return 0;
+    }
+
+    // get the matrix
+    cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(mCapsule, capsule_t));
+    cuda_vector * v = static_cast<cuda_vector *>(PyCapsule_GetPointer(vCapsule, pyre::extensions::cuda::vector::capsule_t));
+
+    int element_bytes = m->nbytes/m->size;
+    char * m_start = m->data + start*element_bytes;
+
+    cudaSafeCall(cudaMemcpy(v->data, m_start, n*element_bytes, cudaMemcpyDefault));
+
+    // return none
+    Py_RETURN_NONE;
+}
+
 // transpose
 const char * const pyre::extensions::cuda::matrix::transpose__name__ = "matrix_transpose";
 const char * const pyre::extensions::cuda::matrix::transpose__doc__ = "copy a transpose/submatrix to another matrix";
@@ -530,7 +683,7 @@ transpose(PyObject *, PyObject * args) {
         return 0;
     }
 
-    // get the two matrixs
+    // get the two matrices
     cuda_matrix * src = static_cast<cuda_matrix *>(PyCapsule_GetPointer(srcObj, capsule_t));
     cuda_matrix * dst = static_cast<cuda_matrix *>(PyCapsule_GetPointer(dstObj, capsule_t));
 
@@ -557,6 +710,51 @@ transpose(PyObject *, PyObject * args) {
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+// copy_triangle
+const char * const pyre::extensions::cuda::matrix::copy_triangle__name__ = "matrix_copy_triangle";
+const char * const pyre::extensions::cuda::matrix::copy_triangle__doc__ = "copy upper triangle to lower or vice versa for a matrix";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+copy_triangle(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * mCapsule;
+    int fill_mode;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!i:matrix_copy_triangle",
+                                  &PyCapsule_Type, &mCapsule, &fill_mode);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if ( !PyCapsule_IsValid(mCapsule, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return 0;
+    }
+
+    // get the matrix
+    cuda_matrix * m = static_cast<cuda_matrix *>(PyCapsule_GetPointer(mCapsule, capsule_t));
+
+    switch(m->dtype) {
+    case PYCUDA_FLOAT:
+        cudalib::matrix::copy_triangle<float>((float * const)m->data,
+                                     m->size1, fill_mode);
+        break;
+    case PYCUDA_DOUBLE:
+        cudalib::matrix::copy_triangle<double>((double * const)m->data,
+                                    m->size1, fill_mode);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
+        return 0;
+    } //end of switch
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 // inverse by LU
 const char * const pyre::extensions::cuda::matrix::inverse__name__ = "matrix_inverse";

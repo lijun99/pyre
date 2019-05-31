@@ -28,7 +28,7 @@
 // PyErr Object
 namespace pyre { namespace extensions { namespace cuda { namespace curand {
     const char * curandGetErrMsg(curandStatus_t err);
-    
+
     PyObject * PyCurandErr = nullptr;
 } } } }
 
@@ -96,7 +96,7 @@ registerExceptions(PyObject * module, PyObject * args)
     if (!PyArg_ParseTuple(args, "O!:curand_registerExceptions", &PyModule_Type, &exceptions)) {
         return nullptr;
     }
-    
+
     // create the curand exception
     PyCurandErr = PyErr_NewException("curand_error", NULL, NULL);
 
@@ -121,18 +121,18 @@ alloc(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "i:curand_alloc", &genType)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand.alloc"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand.alloc");
         return nullptr;
     }
-    
-    // create a curand generator 
+
+    // create a curand generator
     curandGenerator_t gen = NULL;
     curandSafeCall(curandCreateGenerator(&gen, (curandRngType_t)genType));
     /*if(status!=CURAND_STATUS_SUCCESS) {
         PyErr_SetString(PyCurandErr, curandGetErrMsg(status));
         return 0;
     }*/
-    
+
     // return as a capsule
     return PyCapsule_New(gen, capsule_t, free);
 }
@@ -147,7 +147,7 @@ free(PyObject * capsule)
     // get the generator
     curandGenerator_t gen =
         static_cast<curandGenerator_t>(PyCapsule_GetPointer(capsule, capsule_t));
-    
+
     // deallocate
     curandSafeCall(curandDestroyGenerator(gen));
     // and return
@@ -168,7 +168,7 @@ setseed(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!K:curand_alloc", &PyCapsule_Type, &genCapsule, &seed)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_setseed"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_setseed");
         return nullptr;
     }
     // check curand generator capsule
@@ -179,7 +179,7 @@ setseed(PyObject *, PyObject *args)
     // get the generator
     curandGenerator_t gen =
         static_cast<curandGenerator_t>(PyCapsule_GetPointer(genCapsule, capsule_t));
-    // call 
+    // call
     curandSafeCall(curandSetPseudoRandomGeneratorSeed(gen, seed));
 
     // return None
@@ -200,7 +200,7 @@ gaussian(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!O!dd:curand_gaussian", &PyCapsule_Type, &genCapsule, &PyCapsule_Type, &dataCapsule, &mean, &sdev)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_gaussian"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_gaussian");
         return nullptr;
     }
     // check curand generator capsule
@@ -216,12 +216,34 @@ gaussian(PyObject *, PyObject *args)
     if (PyCapsule_IsValid(dataCapsule, pyre::extensions::cuda::vector::capsule_t)) {
         // get the vector
         cuda_vector * v = static_cast<cuda_vector *>(PyCapsule_GetPointer(dataCapsule, pyre::extensions::cuda::vector::capsule_t));
+
         switch(v->dtype) {
             case PYCUDA_DOUBLE:
-                curandSafeCall(curandGenerateNormalDouble(gen, (double *)v->data, v->size, mean, sdev));
+                // cuda pseudorandom generator for Normal/logNormal requires even numbers
+                if (v->size %2) {
+                    double * v_temp;
+                    size_t size_temp = v->size+1;
+                    cudaSafeCall(cudaMalloc((void **)&v_temp, size_temp*sizeof(double)));
+                    curandSafeCall(curandGenerateNormalDouble(gen, v_temp, size_temp, mean, sdev));
+                    cudaSafeCall(cudaMemcpy(v->data, v_temp, v->nbytes, cudaMemcpyDefault));
+                    cudaSafeCall(cudaFree(v_temp));
+                }
+                else {
+                    curandSafeCall(curandGenerateNormalDouble(gen, (double *)v->data, v->size, mean, sdev));
+                }
                 break;
             case PYCUDA_FLOAT:
-                curandSafeCall(curandGenerateNormal(gen, (float *)v->data, v->size, (float)mean, (float)sdev));
+                if (v->size %2) {
+                    float * v_temp;
+                    size_t size_temp = v->size+1;
+                    cudaSafeCall(cudaMalloc((void **)&v_temp, size_temp*sizeof(float)));
+                    curandSafeCall(curandGenerateNormal(gen, v_temp, size_temp, (float)mean, (float)sdev));
+                    cudaSafeCall(cudaMemcpy(v->data, v_temp, v->nbytes, cudaMemcpyDefault));
+                    cudaSafeCall(cudaFree(v_temp));
+                }
+                else {
+                    curandSafeCall(curandGenerateNormal(gen, (float *)v->data, v->size, (float)mean, (float)sdev));
+                }
                 break;
             default:
                 PyErr_SetString(PyExc_TypeError, "invalid data type for curand generation");
@@ -234,10 +256,31 @@ gaussian(PyObject *, PyObject *args)
         // check the data type of matrix
         switch(m->dtype) {
             case PYCUDA_DOUBLE:
-                curandSafeCall(curandGenerateNormalDouble(gen, (double *)m->data, m->size, mean, sdev));
+                // cuda pseudorandom generator for Normal/logNormal requires even numbers
+                if (m->size %2) {
+                    double * m_temp;
+                    size_t size_temp = m->size+1;
+                    cudaSafeCall(cudaMalloc((void **)&m_temp, size_temp*sizeof(double)));
+                    curandSafeCall(curandGenerateNormalDouble(gen, m_temp, size_temp, mean, sdev));
+                    cudaSafeCall(cudaMemcpy(m->data, m_temp, m->nbytes, cudaMemcpyDefault));
+                    cudaSafeCall(cudaFree(m_temp));
+                }
+                else {
+                    curandSafeCall(curandGenerateNormalDouble(gen, (double *)m->data, m->size, mean, sdev));
+                }
                 break;
             case PYCUDA_FLOAT:
-                curandSafeCall(curandGenerateNormal(gen, (float *)m->data, m->size, (float)mean, (float)sdev));
+                if (m->size %2) {
+                    float * m_temp;
+                    size_t size_temp = m->size+1;
+                    cudaSafeCall(cudaMalloc((void **)&m_temp, size_temp*sizeof(float)));
+                    curandSafeCall(curandGenerateNormal(gen, m_temp, size_temp, (float)mean, (float)sdev));
+                    cudaSafeCall(cudaMemcpy(m->data, m_temp, m->nbytes, cudaMemcpyDefault));
+                    cudaSafeCall(cudaFree(m_temp));
+                }
+                else {
+                    curandSafeCall(curandGenerateNormal(gen, (float *)m->data, m->size, (float)mean, (float)sdev));
+                }
                 break;
             default:
                 PyErr_SetString(PyExc_TypeError, "invalid data type for curand generation");
@@ -254,7 +297,7 @@ gaussian(PyObject *, PyObject *args)
 }
 
 // uniform distribution generation [0, 1)
-const char * const pyre::extensions::cuda::curand::uniform__name__ = "curand_uniform"; 
+const char * const pyre::extensions::cuda::curand::uniform__name__ = "curand_uniform";
 const char * const pyre::extensions::cuda::curand::uniform__doc__ = "curand generate uniform distribution samples for vector/matrix";
 PyObject *
 pyre::extensions::cuda::curand::
@@ -266,7 +309,7 @@ uniform(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!O!:curand_uniform", &PyCapsule_Type, &genCapsule, &PyCapsule_Type, &dataCapsule)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_uniform"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for curand_uniform");
         return nullptr;
     }
     // check curand generator capsule

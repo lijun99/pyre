@@ -20,6 +20,8 @@ PROJ_SRCS = \
     elementwise.cu \
     linalg.cu \
     matrixops.cu \
+    statistics.cu \
+
 
 # the products
 PROJ_SAR = $(BLD_LIBDIR)/libpyre$(PACKAGE).$(EXT_SAR)
@@ -52,6 +54,9 @@ EXPORT_PKG_HEADERS = \
     elementwise.h \
     linalg.h \
     matrixops.h \
+    atomic.h \
+    reduction.h \
+    statistics.h \
 
 # standard targets
 all: $(PROJ_DLL) export

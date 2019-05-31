@@ -50,6 +50,12 @@ namespace cudalib {
                 const size_t m, const size_t n,
                 cudaStream_t stream=0);
 
+        // copy upper triangle to lower or vice versa for nxn matrix
+        template<typename T>
+        void copy_triangle(T* const gdata,
+                const size_t n, const int fill=1,
+                cudaStream_t stream=0);
+
     } // of namespace matrix
 } // of namespace cudalib
 

@@ -33,6 +33,7 @@
 #include "cusolver.h"
 #include "stream.h"
 #include "timer.h"
+#include "stats.h"
 
 // put everything in my private namespace
 namespace pyre {
@@ -61,15 +62,27 @@ namespace pyre {
                 // discover
                 { discover__name__, discover, METH_VARARGS, discover__doc__ },
 
+                // stream
+                {stream::alloc__name__, stream::alloc, METH_VARARGS, stream::alloc__name__},
+
+                // timer
+                {timer::alloc__name__, timer::alloc, METH_VARARGS, timer::alloc__name__},
+                {timer::start__name__, timer::start, METH_VARARGS, timer::start__name__},
+                {timer::stop__name__, timer::stop, METH_VARARGS, timer::stop__name__},
+                {timer::time__name__, timer::time, METH_VARARGS, timer::time__name__},
+
 
                 // vector
                 {vector::alloc__name__, vector::alloc, METH_VARARGS, vector::alloc__doc__},
                 {vector::zero__name__, vector::zero, METH_VARARGS, vector::zero__doc__},
+                {vector::filla__name__, vector::filla, METH_VARARGS, vector::filla__doc__},
                 {vector::fill__name__, vector::fill, METH_VARARGS, vector::fill__doc__},
                 {vector::copy__name__, vector::copy, METH_VARARGS, vector::copy__doc__},
                 {vector::iadd__name__, vector::iadd, METH_VARARGS, vector::iadd__doc__},
                 {vector::isub__name__, vector::isub, METH_VARARGS, vector::isub__doc__},
                 {vector::imul__name__, vector::imul, METH_VARARGS, vector::imul__doc__},
+                {vector::iadd_scalar__name__, vector::iadd_scalar, METH_VARARGS, vector::iadd_scalar__doc__},
+                {vector::imul_scalar__name__, vector::imul_scalar, METH_VARARGS, vector::imul_scalar__doc__},
 
                 // matrix
                 {matrix::alloc__name__, matrix::alloc, METH_VARARGS, matrix::alloc__doc__},
@@ -78,11 +91,15 @@ namespace pyre {
                 {matrix::iadd__name__, matrix::iadd, METH_VARARGS, matrix::iadd__doc__},
                 {matrix::isub__name__, matrix::isub, METH_VARARGS, matrix::isub__doc__},
                 {matrix::imul__name__, matrix::imul, METH_VARARGS, matrix::imul__doc__},
+                {matrix::iadd_scalar__name__, matrix::iadd_scalar, METH_VARARGS, matrix::iadd_scalar__doc__},
+                {matrix::imul_scalar__name__, matrix::imul_scalar, METH_VARARGS, matrix::imul_scalar__doc__},
                 {matrix::copy__name__, matrix::copy, METH_VARARGS, matrix::copy__doc__},
                 {matrix::copytile__name__, matrix::copytile, METH_VARARGS, matrix::copytile__doc__},
                 {matrix::copycols__name__, matrix::copycols, METH_VARARGS, matrix::copycols__doc__},
                 {matrix::duplicate_vector__name__, matrix::duplicate_vector, METH_VARARGS, matrix::duplicate_vector__doc__},
+                {matrix::tovector__name__, matrix::tovector, METH_VARARGS, matrix::tovector__doc__},
                 {matrix::transpose__name__, matrix::transpose, METH_VARARGS, matrix::transpose__doc__},
+                {matrix::copy_triangle__name__, matrix::copy_triangle, METH_VARARGS, matrix::copy_triangle__doc__},
                 {matrix::inverse__name__, matrix::inverse, METH_VARARGS, matrix::inverse__doc__},
                 {matrix::inverse_lu_cusolver__name__, matrix::inverse_lu_cusolver, METH_VARARGS, matrix::inverse_lu_cusolver__doc__},
                 {matrix::inverse_cholesky__name__, matrix::inverse_cholesky, METH_VARARGS, matrix::inverse_cholesky__doc__},
@@ -125,15 +142,28 @@ namespace pyre {
                 {cusolverDn::cusolverDnCreate__name__, cusolverDn::cusolverDnCreate, METH_VARARGS, cusolverDn::cusolverDnCreate__doc__},
                 {cusolverDn::cusolverDnSetStream__name__, cusolverDn::cusolverDnSetStream, METH_VARARGS, cusolverDn::cusolverDnSetStream__doc__},
 
-                // stream
-                {stream::alloc__name__, stream::alloc, METH_VARARGS, stream::alloc__name__},
+                // stats
+                {stats::vector_amin__name__, stats::vector_amin, METH_VARARGS, stats::vector_amin__doc__},
+                {stats::vector_amax__name__, stats::vector_amax, METH_VARARGS, stats::vector_amax__doc__},
+                {stats::vector_sum__name__, stats::vector_sum, METH_VARARGS, stats::vector_sum__doc__},
+                {stats::vector_mean__name__, stats::vector_mean, METH_VARARGS, stats::vector_mean__doc__},
+                {stats::vector_std__name__, stats::vector_std, METH_VARARGS, stats::vector_std__doc__},
 
-                // timer
-                {timer::alloc__name__, timer::alloc, METH_VARARGS, timer::alloc__name__},
-                {timer::start__name__, timer::start, METH_VARARGS, timer::start__name__},
-                {timer::stop__name__, timer::stop, METH_VARARGS, timer::stop__name__},
-                {timer::time__name__, timer::time, METH_VARARGS, timer::time__name__},
+                {stats::matrix_amin__name__, stats::matrix_amin, METH_VARARGS, stats::matrix_amin__doc__},
+                {stats::matrix_amax__name__, stats::matrix_amax, METH_VARARGS, stats::matrix_amax__doc__},
+                {stats::matrix_sum__name__, stats::matrix_sum, METH_VARARGS, stats::matrix_sum__doc__},
+                {stats::matrix_mean_flattened__name__, stats::matrix_mean_flattened, METH_VARARGS, stats::matrix_mean_flattened__doc__},
+                {stats::matrix_mean__name__, stats::matrix_mean, METH_VARARGS, stats::matrix_mean__doc__},
+                {stats::matrix_mean_std__name__, stats::matrix_mean_std, METH_VARARGS, stats::matrix_mean_std__doc__},
 
+                {stats::L1norm__name__, stats::L1norm, METH_VARARGS, stats::L1norm__doc__},
+                {stats::L2norm__name__, stats::L2norm, METH_VARARGS, stats::L2norm__doc__},
+                {stats::Linfnorm__name__, stats::Linfnorm, METH_VARARGS, stats::Linfnorm__doc__},
+
+                {stats::vector_covariance__name__, stats::vector_covariance, METH_VARARGS, stats::vector_covariance__doc__},
+                {stats::vector_correlation__name__, stats::vector_correlation, METH_VARARGS, stats::vector_correlation__doc__},
+                {stats::matrix_covariance__name__, stats::matrix_covariance, METH_VARARGS, stats::matrix_covariance__doc__},
+                {stats::matrix_correlation__name__, stats::matrix_correlation, METH_VARARGS, stats::matrix_correlation__doc__},
 
                 // sentinel
                 {0, 0, 0, 0}

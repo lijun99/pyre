@@ -9,6 +9,6 @@
 // my declaration
 #include "timer.h"
 
-//methods are already defined in cutimer
+//methods are already defined in timer.h
 //end of file
 

@@ -19,6 +19,7 @@
 #include "elementwise.h"
 #include "linalg.h"
 #include "matrixops.h"
+#include "statistics.h"
 
 #endif //cudalib_cudalib_h
 // end of file

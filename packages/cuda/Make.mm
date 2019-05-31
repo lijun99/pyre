@@ -22,6 +22,7 @@ EXPORT_PYTHON_MODULES = \
     cuRand.py \
     cuBlas.py \
     cuSolverDn.py \
+    Stats.py \
     __init__.py
 
 # standard targets
