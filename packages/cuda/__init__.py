@@ -47,8 +47,8 @@ from .cuRand import cuRand as curand
 from .cuBlas import cuBlas as cublas
 from .cuSolverDn import cuSolverDn as cusolverdn
 from .Stats import Stats as stats
+from .Timer import Timer as timer
 
-#from .Timer import Timer as timer
 
 def current_device():
     """

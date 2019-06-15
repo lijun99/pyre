@@ -51,20 +51,48 @@ alloc(PyObject *, PyObject *args)
     return PyCapsule_New(cvector, capsule_t, free);
 }
 
+// (force) deallocate a gpu vector, only when python garbage collector failed to release gpu memory
+const char * const pyre::extensions::cuda::vector::dealloc__name__ = "vector_dealloc";
+const char * const pyre::extensions::cuda::vector::dealloc__doc__ = "deallocate a vector on gpu";
+
+PyObject *
+pyre::extensions::cuda::vector::
+dealloc(PyObject *, PyObject * args)
+{
+    PyObject * capsule;
+    int status = PyArg_ParseTuple(args, "O!:vector_dealloc", &PyCapsule_Type, &capsule);
+    // if something went wrong
+    if (!status) {
+        return 0;
+    }
+
+    // get the vector
+    cuda_vector * cvector =
+        static_cast<cuda_vector *>(PyCapsule_GetPointer(capsule, capsule_t));
+
+    // deallocate
+    if(cvector->data != nullptr) {
+       cudaSafeCall(cudaFree(cvector->data));
+       cvector->data = nullptr;
+    }
+    Py_RETURN_NONE;
+}
+
 // destructors
 void
 pyre::extensions::cuda::vector::
 free(PyObject * capsule)
 {
     // bail out if the capsule is not valid
-    if (!PyCapsule_IsValid(capsule, pyre::extensions::cuda::vector::capsule_t)) return;
+    if (!PyCapsule_IsValid(capsule, capsule_t)) return;
     // get the vector
     cuda_vector * cvector =
-        static_cast<cuda_vector *>(PyCapsule_GetPointer(capsule, pyre::extensions::cuda::vector::capsule_t));
+        static_cast<cuda_vector *>(PyCapsule_GetPointer(capsule, capsule_t));
 
     // deallocate
-    if(!cvector->data)
+    if(cvector->data != nullptr)
        cudaSafeCall(cudaFree(cvector->data));
+       cvector->data = nullptr;
     // and return
     return;
 }
@@ -113,6 +141,8 @@ zero(PyObject *, PyObject * args) {
     return Py_None;
 }
 
+// a test routine for using O& parser with converter
+// provides the same function as fill below
 const char * const pyre::extensions::cuda::vector::filla__name__ = "vector_filla";
 const char * const pyre::extensions::cuda::vector::filla__doc__ = "fill out a vector with a given value";
 PyObject *
@@ -149,7 +179,6 @@ filla(PyObject *, PyObject * args) {
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 
 
 const char * const pyre::extensions::cuda::vector::fill__name__ = "vector_fill";

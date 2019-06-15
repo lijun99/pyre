@@ -14,7 +14,7 @@ def test():
     Test Cholesky/trmm/inverse/gemm
     """
     samples = 100
-    parameters = 2048
+    parameters = 512
 
     precision = 'float32' # or 'float64'
     #### GSL ####

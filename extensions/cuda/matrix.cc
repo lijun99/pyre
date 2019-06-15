@@ -53,20 +53,53 @@ alloc(PyObject *, PyObject *args)
     return PyCapsule_New(cmatrix, capsule_t, free);
 }
 
+// deallocate a gpu matrix
+const char * const pyre::extensions::cuda::matrix::dealloc__name__ = "matrix_dealloc";
+const char * const pyre::extensions::cuda::matrix::dealloc__doc__ = "deallocate a matrix on gpu";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+dealloc(PyObject *, PyObject * args)
+{
+    PyObject * capsule;
+    int status = PyArg_ParseTuple(args, "O!:matrix_dealloc", &PyCapsule_Type, &capsule);
+    // if something went wrong
+    if (!status) {
+        return 0;
+    }
+
+    // get the matrix
+    cuda_matrix * cmatrix =
+        static_cast<cuda_matrix *>(PyCapsule_GetPointer(capsule, pyre::extensions::cuda::matrix::capsule_t));
+
+    // deallocate
+    if( cmatrix->data != nullptr) {
+       cudaSafeCall(cudaFree(cmatrix->data));
+       cmatrix->data = nullptr;
+    }
+    Py_RETURN_NONE;
+}
+
 // destructors
 void
 pyre::extensions::cuda::matrix::
 free(PyObject * capsule)
 {
     // bail out if the capsule is not valid
-    if (!PyCapsule_IsValid(capsule, pyre::extensions::cuda::matrix::capsule_t)) return;
+    if (!PyCapsule_IsValid(capsule, pyre::extensions::cuda::matrix::capsule_t)){
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsule");
+        return;
+    }
     // get the matrix
     cuda_matrix * cmatrix =
         static_cast<cuda_matrix *>(PyCapsule_GetPointer(capsule, pyre::extensions::cuda::matrix::capsule_t));
 
     // deallocate
-    if(!cmatrix->data)
+    if(cmatrix->data != nullptr) {
        cudaSafeCall(cudaFree(cmatrix->data));
+       cmatrix->data = nullptr;
+    }
+    //delete cmatrix;
     // and return
     return;
 }
@@ -573,13 +606,13 @@ duplicate_vector(PyObject *, PyObject * args) {
     // the arguments
     PyObject * srcObj;
     PyObject * dstObj;
-    size_t rows, cols, incx;
+    size_t row_start, rows, cols, incx;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!O!(kk)k:matrix_duplicate_vector",
+                                  args, "O!O!k(kk)k:matrix_duplicate_vector",
                                   &PyCapsule_Type, &dstObj,
                                   &PyCapsule_Type, &srcObj,
-                                  &rows, &cols, &incx);
+                                  &row_start, &rows, &cols, &incx);
     // if something went wrong
     if (!status) return 0;
     // bail out if the two capsules are not valid
@@ -604,15 +637,23 @@ duplicate_vector(PyObject *, PyObject * args) {
     */
     switch(src->dtype) {
     case PYCUDA_FLOAT:
-        cudalib::matrix::duplicate_vector<float>((float * const)dst->data, dst->size2,
+    {
+        float * dst_start = (float *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::duplicate_vector<float>(dst_start, dst->size2,
                                     (const float * const)src->data, incx,
                                     rows, cols);
         break;
+    }
     case PYCUDA_DOUBLE:
-        cudalib::matrix::duplicate_vector<double>((double * const)dst->data, dst->size2,
+    {
+        double *dst_start = (double *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::duplicate_vector<double>(dst_start, dst->size2,
                                     (const double * const)src->data, incx,
                                     rows, cols);
         break;
+    }
     default:
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;

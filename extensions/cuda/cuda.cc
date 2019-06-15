@@ -74,6 +74,7 @@ namespace pyre {
 
                 // vector
                 {vector::alloc__name__, vector::alloc, METH_VARARGS, vector::alloc__doc__},
+                {vector::dealloc__name__, vector::dealloc, METH_VARARGS, vector::dealloc__doc__},
                 {vector::zero__name__, vector::zero, METH_VARARGS, vector::zero__doc__},
                 {vector::filla__name__, vector::filla, METH_VARARGS, vector::filla__doc__},
                 {vector::fill__name__, vector::fill, METH_VARARGS, vector::fill__doc__},
@@ -86,6 +87,7 @@ namespace pyre {
 
                 // matrix
                 {matrix::alloc__name__, matrix::alloc, METH_VARARGS, matrix::alloc__doc__},
+                {matrix::dealloc__name__, matrix::dealloc, METH_VARARGS, matrix::dealloc__doc__},
                 {matrix::zero__name__, matrix::zero, METH_VARARGS, matrix::zero__doc__},
                 {matrix::fill__name__, matrix::fill, METH_VARARGS, matrix::fill__doc__},
                 {matrix::iadd__name__, matrix::iadd, METH_VARARGS, matrix::iadd__doc__},
@@ -135,6 +137,8 @@ namespace pyre {
                 {cublas::trmv__name__, cublas::trmv, METH_VARARGS, cublas::trmv__doc__},
                 {cublas::trmm__name__, cublas::trmm, METH_VARARGS, cublas::trmm__doc__},
                 {cublas::gemm__name__, cublas::gemm, METH_VARARGS, cublas::gemm__doc__},
+                {cublas::gemv__name__, cublas::gemv, METH_VARARGS, cublas::gemv__doc__},
+                {cublas::symm__name__, cublas::symm, METH_VARARGS, cublas::symm__doc__},
                 {cublas::symv__name__, cublas::symv, METH_VARARGS, cublas::symv__doc__},
                 {cublas::syr__name__, cublas::syr, METH_VARARGS, cublas::syr__doc__},
 

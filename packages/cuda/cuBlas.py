@@ -101,11 +101,47 @@ class cuBlas:
         kc = A.shape[1] # k
 
         # create a output matrix if not provided
-        if out is None:
-            out= Matrix(shape=(A.shape[0],B.shape[1]), dtype=A.dtype)
+        C = Matrix(shape=(nc, B.shape[1]), dtype=A.dtype) if out is None else out
         # call cublas_gemm
         libcuda.cublas_gemm(handle, transb, transa,
-            mc, nc, kc, alpha, B.data, mc, A.data, kc, beta, out.data, mc)
+                            mc, nc, kc, alpha,
+                            B.data, B.shape[1],
+                            A.data, A.shape[1],
+                            beta,
+                            C.data, C.shape[1])
+        return C
+
+    def gemv(A, x, handle=None, out=None, trans = 0, alpha=1.0, beta=0.0):
+        """
+        y(out) = alpha op(A) x + beta y
+        :param A: matrix (rows, cols)
+        :param x: vector with size= cols/rows if trans=0/1 (notrans/transpose)
+        :param handle: cublas handle
+        :param out:
+        :param trans:
+        :param alpha:
+        :param beta:
+        :return:
+        """
+        # get a cublas handle if not provided
+        handle = handle if handle is not None else cubBlas.get_current_handle()
+
+        # allocate y/output if not provided
+        if out is None:
+            out_size = A.shape[1] if trans ==0 else A.shape[0]
+            out = Vector(shape=out_size, dtype=A.dtype)
+        # reverse the transpose flag
+        trans_cblas = cuBlas.CUBLAS_OP_N if trans==1 else cuBlas.CUBLAS_OP_T
+        # call cublas wrapper (not that cublas uses column-major)
+        libcuda.cublas_gemv(handle, trans,
+                            A.shape[1], A.shape[0], #m, n
+                            alpha,
+                            A.data, A.shape[1],
+                            x.data, 1,
+                            beta,
+                            out.data, 1
+                            )
+        # all done
         return out
 
     def trmv(A, x, handle=None,
@@ -162,8 +198,7 @@ class cuBlas:
         # C= AB (sideleft) -> C^T = B^T A^T  (mxn) = (mxn)x(nxn)
         # C = BA (sideright) -> C^T = A^T B^T (mxn) = (mxm) x (mxn)
 
-        if out is None:
-            out = Matrix(shape=B.shape, dtype=B.dtype)
+        C = out if out is not None else Matrix(shape=B.shape, dtype=B.dtype)
 
         # change notations to column major
         side_cblas = cuBlas.CUBLAS_SIDE_RIGHT if side == cuBlas.SideLeft else cuBlas.CUBLAS_SIDE_LEFT
@@ -174,9 +209,9 @@ class cuBlas:
         # determine dimensions
         m = B.shape[1]
         n = B.shape[0]
-        lda = m if side_cblas == cuBlas.CUBLAS_SIDE_LEFT else n
-        ldb = m
-        ldc = m
+        lda = A.shape[1]
+        ldb = B.shape[1]
+        ldc = C.shape[1]
 
         # call cublas
         libcuda.cublas_trmm(handle, side_cblas, uplo_cblas,
@@ -184,8 +219,82 @@ class cuBlas:
             m, n, alpha,
             A.data, lda,
             B.data, ldb,
-            out.data, ldc)
+            C.data, ldc)
+        # return
+        return C
+
+    def symv(A, x, handle=None, uplo=1, n=None, alpha=1.0, beta=0.0, out=None):
+        """
+        symmetric matrix-vector multiplication y = alpha A x + beta y
+        Args: A symmetric nxn, x vector n
+        Return: x
+        """
+        if handle is None:
+            handle = cuBlas.get_current_handle()
+
+        # change notations to column major
+        uplo_cblas = cuBlas.CUBLAS_FILL_MODE_UPPER if uplo == cuBlas.FillModeLower else cuBlas.CUBLAS_FILL_MODE_LOWER
+
+
+        # determine dimensions
+        lda = A.shape[1]
+        n = n if n is not None else A.shape[1]
+
+        # get y
+        y = out if out is not None else Vector(shape=n, dtype=A.dtype)
+
+        # call cublas
+        libcuda.cublas_symv(handle,
+                            uplo_cblas,
+                            n,
+                            alpha,
+                            A.data, lda,
+                            x.data, 1,
+                            beta,
+                            out.data, 1)
         # return
         return out
+
+    def symm(A, B, handle=None, out=None, alpha=1.0, beta=0.0,
+            uplo = 1, #upper
+            side = 0, #left
+            ):
+        """
+        symmetric matrix-matrix multiplication C= A B (Note in blas B = A B)
+        Args: if SideLeft A symmetric mxm, B mxn
+              if SideRight, A symmetric nxn B mxn
+        Return: out(C)  m x n
+        """
+
+        if handle is None:
+            handle = cuBlas.get_current_handle()
+
+        # row-major to cublas column-major conversion
+        # C= AB (sideleft) -> C^T = B^T A^T  (mxn) = (mxn)x(nxn) (sideright)
+        # C = BA (sideright) -> C^T = A^T B^T (mxn) = (mxm) x (mxn)(sideleft)
+
+        C = out if out is not None else Matrix(shape=B.shape, dtype=B.dtype)
+
+        # change notations to column major
+        side_cblas = cuBlas.CUBLAS_SIDE_RIGHT if side == cuBlas.SideLeft else cuBlas.CUBLAS_SIDE_LEFT
+        uplo_cblas = cuBlas.CUBLAS_FILL_MODE_UPPER if uplo == cuBlas.FillModeLower else cuBlas.CUBLAS_FILL_MODE_LOWER
+
+        # determine dimensions
+        m = B.shape[1]
+        n = B.shape[0]
+        lda = A.shape[1]
+        ldb = B.shape[1]
+        ldc = C.shape[1]
+
+        # call cublas
+        libcuda.cublas_trmm(handle, side_cblas, uplo_cblas,
+            m, n, alpha,
+            A.data, lda,
+            B.data, ldb,
+            beta,
+            C.data, ldc)
+        # return
+        return C
+
 
 # end of file

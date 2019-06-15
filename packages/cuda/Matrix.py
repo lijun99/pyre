@@ -124,11 +124,23 @@ class Matrix:
 
     def get_row(self, row=0, out=None):
         """
-        get a view of one row
-        :param row:
-        :return:
+        get one row
+        :param row: row index
+        :return: a cuda vector of size=columns
         """
         return self.tovector(start=(row, 0), size=self.shape[1], out=out)
+
+    def set_row(self, src, row=0):
+        """
+        set one row from a vector
+        :param src: cuda vector
+        :param row: row index
+        :return: self
+        """
+        # size to be copied
+        size = (1, src.shape)
+        libcuda.matrix_duplicate_vector(self.data, src.data, row, size, 1)
+        return self
 
 
     def insert(self, src, start=(0,0), shape=None):
@@ -150,7 +162,11 @@ class Matrix:
 
     def copycols(self, dst, indices, batch=None):
         """
-        copy selected columns as listed in indices
+        copy one or more columns to another matrix, the columns to be copied are specified by indices
+        :param dst:
+        :param indices:
+        :param batch:
+        :return:
         """
         batch = batch if batch is not None else dst.shape[0]
         libcuda.matrix_copycols(dst.data, self.data, (batch, indices.shape), indices.data)
@@ -159,11 +175,17 @@ class Matrix:
 
     def duplicateVector(self, src, size=None, incx=1):
         """
-        duplicate batch copies of vector from src
+        Copy a vector to first one or few rows to this matrix
+        :param src:  cuda vector
+        :param size:
+        :param incx:
+        :return:
         """
         size = size if size is not None else (self.shape[0], src.shape)
-        libcuda.matrix_duplicate_vector(self.data, src.data, size, incx)
+        libcuda.matrix_duplicate_vector(self.data, src.data, 0, size, incx)
         return self
+
+
 
     def copy_triangle(self, fill=1):
         """
@@ -375,6 +397,14 @@ class Matrix:
         # return (mean, sd)
         return mean, sd
 
+    def free(self):
+        """
+        force releasing gpu memory
+        :return:
+        """
+        libcuda.matrix_dealloc(self.data)
+        return
+
     # meta methods
     def __init__(self, shape=(1,1), source=None, dtype="float64", **kwds):
         # create a cuda Matrix from gsl(host) Matrix
@@ -468,6 +498,7 @@ class Matrix:
             # otherwise, let the interpreter know
             raise NotImplemented
         return self
+
 
     # private data
     data = None

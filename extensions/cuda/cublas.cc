@@ -27,7 +27,7 @@
 
 // PyErr Object
 namespace pyre { namespace extensions { namespace cuda { namespace cublas {
-    
+
     PyObject * PycublasErr = nullptr;
     const char * cublasGetErrMsg(cublasStatus_t err);
 
@@ -100,7 +100,7 @@ registerExceptions(PyObject * module, PyObject * args)
     if (!PyArg_ParseTuple(args, "O!:cublas_registerExceptions", &PyModule_Type, &exceptions)) {
         return nullptr;
     }
-    
+
     // create the cublas exception
     PycublasErr = PyErr_NewException("cublas_error", NULL, NULL);
 
@@ -120,7 +120,7 @@ PyObject *
 pyre::extensions::cuda::cublas::
 alloc(PyObject *, PyObject *args)
 {
-    // create a cublas generator 
+    // create a cublas generator
     cublasHandle_t handle = NULL;
     cublasSafeCall(cublasCreate(&handle));
 
@@ -138,7 +138,7 @@ free(PyObject * capsule)
     // get the generator
     cublasHandle_t handle =
         static_cast<cublasHandle_t>(PyCapsule_GetPointer(capsule, capsule_t));
-    
+
     // deallocate
     cublasSafeCall(cublasDestroy(handle));
     // and return
@@ -156,7 +156,7 @@ axpy(PyObject *, PyObject *args)
     /*
      * cublasStatus_t cublasSaxpy(cublasHandle_t handle, int n,
                            const float           *alpha, //host or device
-                           const float           *x, int incx, 
+                           const float           *x, int incx,
                            float                 *y, int incy)
      */
     // allocate storage for the arguments
@@ -167,12 +167,12 @@ axpy(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!idO!iO!i:cublas_axpy",
                                 &PyCapsule_Type, &handleCapsule,
-                                &n, &alpha, 
+                                &n, &alpha,
                                 &PyCapsule_Type, &xCapsule, &incx,
                                 &PyCapsule_Type, &yCapsule, &incy))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_axpy"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_axpy");
         return nullptr;
     }
     // check cublas handle capsule
@@ -246,7 +246,7 @@ nrm2(PyObject *, PyObject *args)
                                 &result))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_nrm2"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_nrm2");
         return nullptr;
     }
     // check cublas handle capsule
@@ -287,7 +287,7 @@ nrm2(PyObject *, PyObject *args)
 }
 
 // cublas trmv the triangular matrix-vector multiplication
-// x = op ( A ) x 
+// x = op ( A ) x
 // A triangular n x n
 // x vector n
 // op ( A ) = A if  transa == CUBLAS_OP_N A T if  transa == CUBLAS_OP_T
@@ -321,7 +321,7 @@ trmv(PyObject *, PyObject *args)
                                 &PyCapsule_Type, &xCapsule, &incx))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_trmv"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_trmv");
         return nullptr;
     }
     // check cublas handle capsule
@@ -353,7 +353,7 @@ trmv(PyObject *, PyObject *args)
             n,
             (const float *)A->data, lda,
             (float *)x->data, incx));
-        break; 
+        break;
     case PYCUDA_DOUBLE:
         cublasSafeCall(cublasDtrmv(handle,
             (cublasFillMode_t)uplo,
@@ -366,7 +366,7 @@ trmv(PyObject *, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
         return 0;
     }
-    
+
     // return None
     Py_RETURN_NONE;
 }
@@ -406,13 +406,13 @@ trmm(PyObject *, PyObject *args)
     if (!PyArg_ParseTuple(args, "O!iiiiiidO!iO!iO!i:cublas_trmm",
                                 &PyCapsule_Type, &handleCapsule,
                                 &side, &uplo, &trans, &diag,
-                                &m, &n, &alpha, 
+                                &m, &n, &alpha,
                                 &PyCapsule_Type, &ACapsule, &lda,
                                 &PyCapsule_Type, &BCapsule, &ldb,
                                 &PyCapsule_Type, &CCapsule, &ldc))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_trmm"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_trmm");
         return nullptr;
     }
     // check cublas handle capsule
@@ -462,14 +462,14 @@ trmm(PyObject *, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
         return 0;
     }
-    
+
     // return None
     Py_RETURN_NONE;
 }
 
 
 // cublas gemm matrix-matrix multiplication
-// C = α op ( A ) op ( B ) + β C 
+// C = α op ( A ) op ( B ) + β C
 
 // note cublas uses column major while python/c uses row-major,
 // therefore cuda.matrix should be treated as m=col/size2/shape[1] x n=row/size1/shape[0] for cublas
@@ -501,14 +501,14 @@ gemm(PyObject *, PyObject *args)
                                 &PyCapsule_Type, &handleCapsule,
                                 &transa, &transb,
                                 &m, &n, &k,
-                                &alpha, 
+                                &alpha,
                                 &PyCapsule_Type, &ACapsule, &lda,
                                 &PyCapsule_Type, &BCapsule, &ldb,
                                 &beta,
                                 &PyCapsule_Type, &CCapsule, &ldc))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_gemm"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_gemm");
         return nullptr;
     }
     // check cublas handle capsule
@@ -561,7 +561,196 @@ gemm(PyObject *, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
         return 0;
     }
-    
+
+    // return None
+    Py_RETURN_NONE;
+}
+
+// cublas gemv symmetric matrix-vector multiplication
+// y = α op(A) x + β y
+
+// note cublas uses column major while python/c uses row-major,
+// therefore cuda.matrix should be treated as m=col/size2/shape[1] x n=row/size1/shape[0] for cublas
+const char * const pyre::extensions::cuda::cublas::gemv__name__ = "cublas_gemv";
+const char * const pyre::extensions::cuda::cublas::gemv__doc__ = "cublas gemv";
+PyObject *
+pyre::extensions::cuda::cublas::
+gemv(PyObject *, PyObject *args)
+{
+    /*
+        cublasStatus_t cublasSgemv(cublasHandle_t handle, cublasOperation_t trans,
+                           int m, int n,
+                           const float           *alpha,
+                           const float           *A, int lda,
+                           const float           *x, int incx,
+                           const float           *beta,
+                           float           *y, int incy)
+     */
+    // allocate storage for the arguments
+    PyObject * handleCapsule; // cublas handle capsule
+    int trans;
+    int m, n;
+    double alpha, beta;
+    PyObject * ACapsule, * xCapsule, * yCapsule; // cuda matrix/vector
+    int lda, incx, incy;
+    // if I were not passed the expected arguments
+    if (!PyArg_ParseTuple(args, "O!iiidO!iO!idO!i:cublas_gemv",
+                                &PyCapsule_Type, &handleCapsule,
+                                &trans,
+                                &m, &n,
+                                &alpha,
+                                &PyCapsule_Type, &ACapsule, &lda,
+                                &PyCapsule_Type, &xCapsule, &incx,
+                                &beta,
+                                &PyCapsule_Type, &yCapsule, &incy))
+    {
+        // raise an exception
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_gemv");
+        return nullptr;
+    }
+    // check cublas handle capsule
+    if (!PyCapsule_IsValid(handleCapsule, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cublas handle");
+        return 0;
+    }
+    // check the data capsule type
+    if (!PyCapsule_IsValid(ACapsule, pyre::extensions::cuda::matrix::capsule_t) ||
+            !PyCapsule_IsValid(xCapsule, pyre::extensions::cuda::vector::capsule_t) ||
+            !PyCapsule_IsValid(yCapsule, pyre::extensions::cuda::vector::capsule_t) )
+    {
+        PyErr_SetString(PyExc_TypeError, "invalid vector/matrix type");
+        return 0;
+    }
+    // get the handle
+    cublasHandle_t handle =
+        static_cast<cublasHandle_t>(PyCapsule_GetPointer(handleCapsule, capsule_t));
+
+    // get the matrix
+    cuda_matrix * A = static_cast<cuda_matrix *>(PyCapsule_GetPointer(ACapsule, pyre::extensions::cuda::matrix::capsule_t));
+    cuda_vector * x = static_cast<cuda_vector *>(PyCapsule_GetPointer(xCapsule, pyre::extensions::cuda::vector::capsule_t));
+    cuda_vector * y = static_cast<cuda_vector *>(PyCapsule_GetPointer(yCapsule, pyre::extensions::cuda::vector::capsule_t));
+
+    switch(A->dtype) {
+    case PYCUDA_FLOAT: {
+        float falpha = (float)alpha;
+        float fbeta = (float)beta;
+        cublasSafeCall(cublasSgemv(handle, (cublasOperation_t) trans,
+            m, n, &falpha,
+            (const float *)A->data, lda,
+            (const float *)x->data, incx,
+            &fbeta,
+            (float *)y->data, incy));
+        break; }
+    case PYCUDA_DOUBLE:
+        cublasSafeCall(cublasDgemv(handle, (cublasOperation_t) trans,
+            m, n, &alpha,
+            (const double *)A->data, lda,
+            (const double *)x->data, incx,
+            &beta,
+            (double *)y->data, incy));
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
+        return 0;
+    }
+
+    // return None
+    Py_RETURN_NONE;
+}
+
+// cublas symm the triangular matrix-matrix multiplication
+//  C = α A B + β C if  side == CUBLAS_SIDE_LEFT
+//  C =  α B A + β C if  side == CUBLAS_SIDE_RIGHT
+// A symmetric ldaxm if LEFT, ldaxn if RIGHT
+// B, C mxn matrices
+
+// note cublas uses column major while python/c uses row-major
+const char * const pyre::extensions::cuda::cublas::symm__name__ = "cublas_symm";
+const char * const pyre::extensions::cuda::cublas::symm__doc__ = "cublas symm";
+PyObject *
+pyre::extensions::cuda::cublas::
+symm(PyObject *, PyObject *args)
+{
+    /*
+        cublasStatus_t cublasSsymm(cublasHandle_t handle,
+                           cublasSideMode_t side, cublasFillMode_t uplo,
+                           int m, int n,
+                           const float           *alpha,
+                           const float           *A, int lda,
+                           const float           *B, int ldb,
+                           const float           *beta,
+                           float           *C, int ldc)
+     */
+    // allocate storage for the arguments
+    PyObject * handleCapsule; // cublas handle capsule
+    int side, uplo;
+    int m, n;
+    double alpha, beta;
+    PyObject * ACapsule, * BCapsule, * CCapsule; // cuda matrix
+    int lda, ldb, ldc;
+    // if I were not passed the expected arguments
+    if (!PyArg_ParseTuple(args, "O!iiiidO!iO!idO!i:cublas_symm",
+                                &PyCapsule_Type, &handleCapsule,
+                                &side, &uplo,
+                                &m, &n, &alpha,
+                                &PyCapsule_Type, &ACapsule, &lda,
+                                &PyCapsule_Type, &BCapsule, &ldb,
+                                &beta,
+                                &PyCapsule_Type, &CCapsule, &ldc))
+    {
+        // raise an exception
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_symm");
+        return nullptr;
+    }
+    // check cublas handle capsule
+    if (!PyCapsule_IsValid(handleCapsule, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cublas handle");
+        return 0;
+    }
+    // get the handle
+    cublasHandle_t handle =
+        static_cast<cublasHandle_t>(PyCapsule_GetPointer(handleCapsule, capsule_t));
+
+    // check the data capsule type
+    if (!PyCapsule_IsValid(ACapsule, pyre::extensions::cuda::matrix::capsule_t) ||
+            !PyCapsule_IsValid(BCapsule, pyre::extensions::cuda::matrix::capsule_t) ||
+            !PyCapsule_IsValid(CCapsule, pyre::extensions::cuda::matrix::capsule_t) )
+    {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix capsules");
+        return 0;
+    }
+
+    // get the matrix
+    cuda_matrix * A = static_cast<cuda_matrix *>(PyCapsule_GetPointer(ACapsule, pyre::extensions::cuda::matrix::capsule_t));
+    cuda_matrix * B = static_cast<cuda_matrix *>(PyCapsule_GetPointer(BCapsule, pyre::extensions::cuda::matrix::capsule_t));
+    cuda_matrix * C = static_cast<cuda_matrix *>(PyCapsule_GetPointer(CCapsule, pyre::extensions::cuda::matrix::capsule_t));
+
+    switch(A->dtype) {
+    case PYCUDA_FLOAT: {
+        float falpha = (float)alpha;
+        float fbeta = (float)beta;
+        cublasSafeCall(cublasSsymm(handle,
+            (cublasSideMode_t)side, (cublasFillMode_t)uplo,
+            m, n, &falpha,
+            (const float *)A->data, lda,
+            (const float *)B->data, ldb,
+            &fbeta,
+            (float *)C->data, ldc));
+        break; }
+    case PYCUDA_DOUBLE:
+        cublasSafeCall(cublasDsymm(handle,
+            (cublasSideMode_t)side, (cublasFillMode_t)uplo,
+            m, n, &alpha,
+            (const double *)A->data, lda,
+            (const double *)B->data, ldb,
+            &beta,
+            (double *)C->data, ldc));
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
+        return 0;
+    }
+
     // return None
     Py_RETURN_NONE;
 }
@@ -596,14 +785,14 @@ symv(PyObject *, PyObject *args)
                                 &PyCapsule_Type, &handleCapsule,
                                 &uplo,
                                 &n,
-                                &alpha, 
+                                &alpha,
                                 &PyCapsule_Type, &ACapsule, &lda,
                                 &PyCapsule_Type, &xCapsule, &incx,
                                 &beta,
                                 &PyCapsule_Type, &yCapsule, &incy))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_symv"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_symv");
         return nullptr;
     }
     // check cublas handle capsule
@@ -622,7 +811,7 @@ symv(PyObject *, PyObject *args)
     // get the handle
     cublasHandle_t handle =
         static_cast<cublasHandle_t>(PyCapsule_GetPointer(handleCapsule, capsule_t));
-        
+
     // get the matrix
     cuda_matrix * A = static_cast<cuda_matrix *>(PyCapsule_GetPointer(ACapsule, pyre::extensions::cuda::matrix::capsule_t));
     cuda_vector * x = static_cast<cuda_vector *>(PyCapsule_GetPointer(xCapsule, pyre::extensions::cuda::vector::capsule_t));
@@ -632,7 +821,7 @@ symv(PyObject *, PyObject *args)
     case PYCUDA_FLOAT: {
         float falpha = (float)alpha;
         float fbeta = (float)beta;
-        cublasSafeCall(cublasSsymv(handle, (cublasFillMode_t) uplo, 
+        cublasSafeCall(cublasSsymv(handle, (cublasFillMode_t) uplo,
             n, &falpha,
             (const float *)A->data, lda,
             (const float *)x->data, incx,
@@ -640,7 +829,7 @@ symv(PyObject *, PyObject *args)
             (float *)y->data, incy));
         break; }
     case PYCUDA_DOUBLE:
-        cublasSafeCall(cublasDsymv(handle, (cublasFillMode_t) uplo, 
+        cublasSafeCall(cublasDsymv(handle, (cublasFillMode_t) uplo,
             n, &alpha,
             (const double *)A->data, lda,
             (const double *)x->data, incx,
@@ -651,7 +840,7 @@ symv(PyObject *, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
         return 0;
     }
-    
+
     // return None
     Py_RETURN_NONE;
 }
@@ -684,12 +873,12 @@ syr(PyObject *, PyObject *args)
                                 &PyCapsule_Type, &handleCapsule,
                                 &uplo,
                                 &n,
-                                &alpha, 
+                                &alpha,
                                 &PyCapsule_Type, &xCapsule, &incx,
                                 &PyCapsule_Type, &ACapsule, &lda))
     {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_syr"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_syr");
         return nullptr;
     }
     // check cublas handle capsule
@@ -707,7 +896,7 @@ syr(PyObject *, PyObject *args)
     // get the handle
     cublasHandle_t handle =
         static_cast<cublasHandle_t>(PyCapsule_GetPointer(handleCapsule, capsule_t));
-        
+
     // get the matrix
     cuda_matrix * A = static_cast<cuda_matrix *>(PyCapsule_GetPointer(ACapsule, pyre::extensions::cuda::matrix::capsule_t));
     cuda_vector * x = static_cast<cuda_vector *>(PyCapsule_GetPointer(xCapsule, pyre::extensions::cuda::vector::capsule_t));
@@ -715,13 +904,13 @@ syr(PyObject *, PyObject *args)
     switch(A->dtype) {
     case PYCUDA_FLOAT: {
         float falpha = (float)alpha;
-        cublasSafeCall(cublasSsyr(handle, (cublasFillMode_t) uplo, 
+        cublasSafeCall(cublasSsyr(handle, (cublasFillMode_t) uplo,
             n, &falpha,
             (const float *)x->data, incx,
             (float *)A->data, lda));
         break; }
     case PYCUDA_DOUBLE:
-        cublasSafeCall(cublasDsyr(handle, (cublasFillMode_t) uplo, 
+        cublasSafeCall(cublasDsyr(handle, (cublasFillMode_t) uplo,
             n, &alpha,
             (const double *)x->data, incx,
             (double *)A->data, lda));
@@ -730,7 +919,7 @@ syr(PyObject *, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "only float/double are currently supported");
         return 0;
     }
-    
+
     // return None
     Py_RETURN_NONE;
 }

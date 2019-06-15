@@ -29,12 +29,21 @@ class Timer:
         return
 
     def stop(self):
-        libcuda.timer_start(self.capsule)
-        return
-
-    def time(self, process=None):
+        libcuda.timer_stop(self.capsule)
         elapsedtime = libcuda.timer_time(self.capsule)
-        print(f'The cuda process {process} takes {elapsedtime} ms.')
-        return
+        return elapsedtime
+
+    def profile(self, process, *args, **kwargs):
+        """
+        Profile a process
+        :param process:
+        :param args:
+        :return:
+        """
+        # start the timer
+        self.start()
+        process(*args, **kwargs)
+        elapsedtime = self.stop()
+        return elapsedtime
 
 #end of file

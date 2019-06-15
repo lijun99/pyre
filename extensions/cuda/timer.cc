@@ -27,9 +27,9 @@ PyObject *
 pyre::extensions::cuda::timer::
 alloc(PyObject *, PyObject *args)
 {
-    // create a timer generator 
+    // create a timer generator
     cudalib::cuTimer * timer = new cudalib::cuTimer();
-    
+
     // return as a capsule
     return PyCapsule_New(timer, capsule_t, free);
 }
@@ -44,9 +44,9 @@ free(PyObject * capsule)
     // get the timer
     cudalib::cuTimer * timer =
         static_cast<cudalib::cuTimer *>(PyCapsule_GetPointer(capsule, capsule_t));
-    
+
     // deallocate
-    timer->~cuTimer();
+    delete timer;
     // and return
     return;
 }
@@ -63,7 +63,7 @@ start(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!:timer_start", &PyCapsule_Type, &capsule)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_start"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_start");
         return nullptr;
     }
     // check timer generator capsule
@@ -74,7 +74,7 @@ start(PyObject *, PyObject *args)
     // get the timer
     cudalib::cuTimer * timer =
         static_cast<cudalib::cuTimer *>(PyCapsule_GetPointer(capsule, capsule_t));
-    // call 
+    // call
     timer->start();
 
     // return None
@@ -93,7 +93,7 @@ stop(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!:timer_stop", &PyCapsule_Type, &capsule)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_stop"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_stop");
         return nullptr;
     }
     // check timer generator capsule
@@ -104,7 +104,7 @@ stop(PyObject *, PyObject *args)
     // get the timer
     cudalib::cuTimer * timer =
         static_cast<cudalib::cuTimer *>(PyCapsule_GetPointer(capsule, capsule_t));
-    // call 
+    // call
     timer->stop();
 
     // return None
@@ -124,7 +124,7 @@ time(PyObject *, PyObject *args)
     // if I were not passed the expected arguments
     if (!PyArg_ParseTuple(args, "O!:timer_time", &PyCapsule_Type, &capsule)) {
         // raise an exception
-        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_time"); 
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for timer_time");
         return nullptr;
     }
     // check timer generator capsule
@@ -135,10 +135,10 @@ time(PyObject *, PyObject *args)
     // get the timer
     cudalib::cuTimer * timer =
         static_cast<cudalib::cuTimer *>(PyCapsule_GetPointer(capsule, capsule_t));
-    // call 
+    // call
     elapsed_time = (double)timer->duration();
 
-    // return 
+    // return
     return PyFloat_FromDouble(elapsed_time);
 }
 

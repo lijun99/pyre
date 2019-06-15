@@ -138,6 +138,14 @@ class Vector:
         # capsule, mean value, size, stride, ddof
         return libcuda.vector_std(self.data, mean, self.shape, 1, ddof)
 
+    def free(self):
+        """
+        force releasing gpu memory
+        :return:
+        """
+        libcuda.vector_dealloc(self.data)
+        return
+
     # meta methods
     def __init__(self, shape=1, source=None, dtype="float64", **kwds):
         # chain up

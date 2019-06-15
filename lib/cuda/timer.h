@@ -20,34 +20,30 @@ namespace cudalib {
 
 // declaration
 class cudalib::cuTimer {
-private:
-    cudaEvent_t _start, _end;
-    float _elapsed_time;
+public:
+    cudaEvent_t _start;
+    cudaEvent_t _end;
 
 public:
     // constructor
-    cuTimer()  {
-        cudaSafeCall(cudaEventCreate(&_start));
-        cudaSafeCall(cudaEventCreate(&_end));
+    /* flags
+    #define cudaEventDefault 0x00
+    #define cudaEventBlockingSync 0x01
+    #define cudaEventDisableTiming 0x02
+    #define cudaEventInterprocess 0x04
+    */
+    cuTimer(unsigned int flags=1)  {
+        cudaSafeCall(cudaEventCreateWithFlags(&_start, flags));
+        cudaSafeCall(cudaEventCreateWithFlags(&_end, flags));
     }
     // destructor
     ~cuTimer() {
         cudaSafeCall(cudaEventDestroy(_start));
         cudaSafeCall(cudaEventDestroy(_end));
     }
-    cuTimer & start() {
-        cudaSafeCall(cudaEventRecord(_start));
-        return *this;
-    }
-    cuTimer & stop() {
-        cudaSafeCall(cudaEventRecord(_end));
-        cudaSafeCall(cudaEventSynchronize(_end));
-        return *this;
-    }
-    float duration() {
-        cudaSafeCall(cudaEventElapsedTime(&_elapsed_time, _start, _end));
-        return _elapsed_time;
-    }
+    cuTimer & start();
+    cuTimer & stop();
+    float duration();
 };
 
 #endif

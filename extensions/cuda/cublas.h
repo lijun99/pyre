@@ -23,13 +23,13 @@ namespace pyre {
                 extern const char * const registerExceptions__name__;
                 extern const char * const registerExceptions__doc__;
                 PyObject * registerExceptions(PyObject *, PyObject*);
-                
+
                 // allocate a cublas handle
                 extern const char * const alloc__name__;
                 extern const char * const alloc__doc__;
                 PyObject * alloc(PyObject *, PyObject *);
 
-                // default deallocator        
+                // default deallocator
                 void free(PyObject *);
 
                 // axpy y = y + a x
@@ -57,6 +57,16 @@ namespace pyre {
                 extern const char * const gemm__doc__;
                 PyObject * gemm(PyObject *, PyObject *);
 
+                //  matrix-vector product
+                extern const char * const gemv__name__;
+                extern const char * const gemv__doc__;
+                PyObject * gemv(PyObject *, PyObject *);
+
+                //  symmetric matrix matrix product
+                extern const char * const symm__name__;
+                extern const char * const symm__doc__;
+                PyObject * symm(PyObject *, PyObject *);
+
                 //  symmetric matrix vector product
                 extern const char * const symv__name__;
                 extern const char * const symv__doc__;
@@ -66,7 +76,7 @@ namespace pyre {
                 extern const char * const syr__name__;
                 extern const char * const syr__doc__;
                 PyObject * syr(PyObject *, PyObject *);
-                
+
             } // of namespace cublas
         } // of namespace cuda
     } // of namespace extensions

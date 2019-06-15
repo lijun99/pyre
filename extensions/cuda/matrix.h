@@ -22,6 +22,11 @@ namespace pyre {
                   extern const char * const alloc__doc__;
                   PyObject * alloc(PyObject *, PyObject *);
 
+                  // deallocate
+                  extern const char * const dealloc__name__;
+                  extern const char * const dealloc__doc__;
+                  PyObject * dealloc(PyObject *, PyObject *);
+
                   // free
                   void free(PyObject *);
 
