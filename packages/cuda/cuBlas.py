@@ -287,7 +287,7 @@ class cuBlas:
         ldc = C.shape[1]
 
         # call cublas
-        libcuda.cublas_trmm(handle, side_cblas, uplo_cblas,
+        libcuda.cublas_symm(handle, side_cblas, uplo_cblas,
             m, n, alpha,
             A.data, lda,
             B.data, ldb,
