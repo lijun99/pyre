@@ -77,11 +77,13 @@ def benchmark2(m, n, k, device=0, precision='float32', iteration=10):
 
 def test():
 
+    print("Profiling gemm for two matrices (2**n, 2**14)x(2**14, 2**14)") 
+    print("n time(SP) time(DP) Tflops(SP) Tflops(DP)")
     for n in range(15):
         flops_ref = 2**14*2**14*2**n*2/10**12;
         time1=benchmark2(2**n, 2**14, 2**14, precision='float32')
         time2=benchmark2(2**n, 2**14, 2**14, precision='float64')
-        print(n, time1, time2, flops_ref/time1, flops_ref/time1, flops_ref/time2 )
+        print(n, time1, time2, flops_ref/time1, flops_ref/time2 )
     return
 
 test()

@@ -57,6 +57,4 @@ def current_device():
     return manager.current_device
 
 
-#from .Timer import Timer as timer 
-
 # end of file

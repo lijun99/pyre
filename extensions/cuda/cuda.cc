@@ -48,7 +48,7 @@ namespace pyre {
                 { version__name__, version, METH_VARARGS, version__doc__ },
                 // license
                 { license__name__, license, METH_VARARGS, license__doc__ },
-                
+
                 // registration
                 { registerExceptions__name__,
                   registerExceptions, METH_VARARGS, registerExceptions__doc__ },
