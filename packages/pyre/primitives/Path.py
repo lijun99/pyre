@@ -170,6 +170,21 @@ class Path(tuple):
         # otherwise
         return name[pos:]
 
+    @property
+    def prefix(self):
+        """
+        The final path component without the suffix
+        """
+        # grab my name
+        name = self.name
+        # look for the last '.'
+        pos = name.rfind('.')
+        # if not there
+        if pos == -1:
+            # my stem is my name
+            return name
+        # otherwise, drop the suffix
+        return name[:pos]
 
     @property
     def suffixes(self):
@@ -189,8 +204,8 @@ class Path(tuple):
         """
         # grab my name
         name = self.name
-        # look for the last '.'
-        pos = name.rfind('.')
+        # look for the first '.'
+        pos = name.find('.')
         # if not there
         if pos == -1:
             # my stem is my name
