@@ -171,7 +171,7 @@ class Path(tuple):
         return name[pos:]
 
     @property
-    def prefix(self):
+    def stems(self):
         """
         The final path component without the suffix
         """
