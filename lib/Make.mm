@@ -27,8 +27,8 @@ endif
 PROJ_TMPDIR = $(BLD_TMPDIR)/lib
 
 # the standard targets
-all:
-	BLD_ACTION="all" $(MM) recurse
+all: export
+
 
 tidy::
 	BLD_ACTION="tidy" $(MM) recurse
@@ -39,7 +39,7 @@ clean::
 distclean::
 	BLD_ACTION="distclean" $(MM) recurse
 
-export::
+export:: export-portinfo
 	BLD_ACTION="export" $(MM) recurse
 
 live:
@@ -48,5 +48,14 @@ live:
 # archiving support
 zipit:
 	PYRE_ZIP=$(PYRE_ZIP) BLD_ACTION="zipit" $(MM) recurse
+
+# exporting the portinfo settings
+export-portinfo: $(EXPORT_ROOT)/include/portinfo
+
+
+$(EXPORT_ROOT)/include/portinfo: $(EXPORT_ROOT)/include Make.mm
+	@sed \
+          -e "s:PYRE_PLATFORM:#define mm_platforms_${MM_PLATFORM}_${MM_ARCH} 1:g" \
+          portinfo > $@
 
 # end of file
