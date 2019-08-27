@@ -40,6 +40,12 @@ PROJ_SRCS = \
     timer.cc \
     stats.cc \
 
+# optional mpi support
+ifneq ($(strip $(MPI_DIR)), )
+    include MPI/default.def
+    PROJ_SRCS += mpi.cc
+endif
+
 # actions
 export:: export-headers
 

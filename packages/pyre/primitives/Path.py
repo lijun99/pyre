@@ -194,7 +194,7 @@ class Path(tuple):
         # get my name and skip any leading dots
         name = self.name.lstrip('.')
         # split on the '.', skip the first bit and return the rest with a leading '.'
-        return ('.' + suffix for suffix in name.split('.')[1:])
+        return list('.' + suffix for suffix in name.split('.')[1:])
 
 
     @property
@@ -203,20 +203,12 @@ class Path(tuple):
         The final path component without any suffixes
         """
         # grab my name
-        name = self.name
-        # look for the first '.'
-        pos = name.find('.')
-        # if not there
-        if pos == -1:
-            # my stem is my name
-            return name
-        # otherwise, drop the suffix
-        return name[:pos]
+        return self.name.split('.')[0]
 
     @property
-    def stems(self):
+    def nameStem(self):
         """
-        The final path component without the suffix
+        The final path component without the last suffix
         """
         # grab my name
         name = self.name
@@ -342,7 +334,7 @@ class Path(tuple):
         # get my suffix
         mine = self.suffix
         # and my stem
-        stem = self.stem
+        stem = self.nameStem
 
         # if the suffix is {None}
         if suffix is None:

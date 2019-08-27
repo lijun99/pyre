@@ -405,6 +405,22 @@ class Matrix:
         libcuda.matrix_dealloc(self.data)
         return
 
+    # mpi support
+    def bcast(self, communicator=None, source=0):
+        """
+        Broadcast the given {vector} from {source} to all tasks in {communicator}
+        """
+        # normalize the communicator
+        if communicator is None:
+            # get the mpi package
+            import mpi
+            # use the world by default
+            communicator = mpi.world
+        # scatter the data
+        libcuda.matrix_bcast(communicator.capsule, source, self.data)
+        # and return it
+        return self
+
     # meta methods
     def __init__(self, shape=(1,1), source=None, dtype="float64", **kwds):
         # create a cuda Matrix from gsl(host) Matrix

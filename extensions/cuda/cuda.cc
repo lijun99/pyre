@@ -35,6 +35,11 @@
 #include "timer.h"
 #include "stats.h"
 
+// mpi support
+#if defined(WITH_MPI)
+#include "mpi.h"
+#endif
+
 // put everything in my private namespace
 namespace pyre {
     namespace extensions {
@@ -168,6 +173,12 @@ namespace pyre {
                 {stats::vector_correlation__name__, stats::vector_correlation, METH_VARARGS, stats::vector_correlation__doc__},
                 {stats::matrix_covariance__name__, stats::matrix_covariance, METH_VARARGS, stats::matrix_covariance__doc__},
                 {stats::matrix_correlation__name__, stats::matrix_correlation, METH_VARARGS, stats::matrix_correlation__doc__},
+
+                // mpi support
+#if defined(WITH_MPI)
+                {vector::bcast__name__, vector::bcast, METH_VARARGS, vector::bcast__doc__},
+                {matrix::bcast__name__, matrix::bcast, METH_VARARGS, matrix::bcast__doc__},
+#endif
 
                 // sentinel
                 {0, 0, 0, 0}
