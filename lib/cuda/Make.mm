@@ -7,11 +7,13 @@
 
 # get the machinery for building shared objects
 include shared/target.def
+
 # get cuda
 include cuda.def
 
 # the project defaults
 include pyre.def
+
 # the package name
 PACKAGE = cuda
 # the sources
@@ -21,7 +23,6 @@ PROJ_SRCS = \
     linalg.cu \
     matrixops.cu \
     statistics.cu \
-
 
 # the products
 PROJ_SAR = $(BLD_LIBDIR)/libpyre$(PACKAGE).$(EXT_SAR)
@@ -38,7 +39,6 @@ PROJ_LIBRARIES = -ljournal -lcublas -lcurand -lcusolver
 # what to export
 # the library
 EXPORT_LIBS = $(PROJ_DLL)
-
 # top level header
 EXPORT_HEADERS = \
     cuda.h \
@@ -59,15 +59,16 @@ EXPORT_PKG_HEADERS = \
     statistics.h \
 
 # standard targets
-all: $(PROJ_DLL) export
+all: export
 
-export:: export-headers export-package-headers export-libraries
+export:: $(PROJ_DLL) export-headers export-package-headers export-libraries
 
 live: live-headers live-package-headers live-libraries
 
 # archiving support
 zipit:
 	cd $(EXPORT_ROOT); \
+	    zip -r $(PYRE_ZIP) lib/libpyre$(PACKAGE).$(EXT_SO); \
         zip -r $(PYRE_ZIP) ${addprefix include/pyre/, $(EXPORT_HEADERS)} ; \
         zip -r $(PYRE_ZIP) include/pyre/$(PACKAGE)
 
