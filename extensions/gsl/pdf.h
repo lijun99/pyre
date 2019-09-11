@@ -97,7 +97,7 @@ namespace gsl {
 
         // the dirichlet distribution
         namespace dirichlet {
-            // sample            
+            // sample
             extern const char * const sample__name__;
             extern const char * const sample__doc__;
             PyObject * sample(PyObject *, PyObject *);
@@ -106,7 +106,7 @@ namespace gsl {
             extern const char * const density__name__;
             extern const char * const density__doc__;
             PyObject * density(PyObject *, PyObject *);
-            
+
             // fills
             extern const char * const vector__name__;
             extern const char * const vector__doc__;
@@ -118,6 +118,16 @@ namespace gsl {
         } // of namespace dirichlet
 
     } // of namespace pdf
+
+    namespace randist {
+
+        // gsl_ran_shuffle
+        extern const char * const vector_shuffle__name__;
+        extern const char * const vector_shuffle__doc__;
+        PyObject * vector_shuffle(PyObject *, PyObject *);
+
+    } // of namespace randist
+
 } // of namespace gsl
 
 #endif

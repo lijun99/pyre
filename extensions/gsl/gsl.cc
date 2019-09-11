@@ -196,6 +196,10 @@ namespace gsl {
         { pdf::dirichlet::matrix__name__, pdf::dirichlet::matrix, METH_VARARGS,
           pdf::dirichlet::matrix__doc__ },
 
+        // randist
+        { randist::vector_shuffle__name__, randist::vector_shuffle, METH_VARARGS,
+          randist::vector_shuffle__doc__ },
+
         // random numbers
         { rng::avail__name__, rng::avail, METH_VARARGS, rng::avail__doc__ },
         { rng::alloc__name__, rng::alloc, METH_VARARGS, rng::alloc__doc__ },

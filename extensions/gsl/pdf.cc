@@ -11,6 +11,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_rng.h>
 
 // local includes
 #include "pdf.h"
@@ -784,5 +785,41 @@ gsl::pdf::dirichlet::matrix(PyObject *, PyObject * args) {
     return Py_None;
 }
 
+// randist::vector_shuffle
+const char * const gsl::randist::vector_shuffle__name__ = "vector_shuffle";
+const char * const gsl::randist::vector_shuffle__doc__ =
+    "shuffle a vector to a random order";
+
+PyObject *
+gsl::randist::vector_shuffle(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * rngCapsule, * vecCapsule;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!:vector_shuffle",
+                                  &PyCapsule_Type, &rngCapsule,
+                                  &PyCapsule_Type, &vecCapsule);
+    // bail out if something went wrong with the argument unpacking
+    if (!status) return 0;
+    // bail out if the capsule is not valid
+    if (!PyCapsule_IsValid(rngCapsule, gsl::rng::capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid rng capsule");
+        return 0;
+    }
+    if (!PyCapsule_IsValid(vecCapsule, gsl::vector::capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid vector capsule");
+        return 0;
+    }
+    // get the rng
+    gsl_rng * r = static_cast<gsl_rng *>(PyCapsule_GetPointer(rngCapsule, gsl::rng::capsule_t));
+    // get the vector
+    gsl_vector * v = static_cast<gsl_vector *>(PyCapsule_GetPointer(vecCapsule, gsl::vector::capsule_t));
+
+    // call the shuffle function
+    gsl_ran_shuffle(r, v->data, v->size, sizeof(double));
+
+    // return none
+    Py_RETURN_NONE;
+}
 
 // end of file

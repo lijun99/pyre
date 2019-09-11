@@ -63,6 +63,7 @@ vectors:
 	${PYTHON} ./vector_min.py
 	${PYTHON} ./vector_minmax.py
 	${PYTHON} ./vector_view.py
+	${PYTHON} ./vector_shuffle.py
 
 matrices:
 	${PYTHON} ./matrix_allocate.py

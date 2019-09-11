@@ -362,6 +362,17 @@ class Vector:
         return self.permutation(shape=self.shape, data=pdata)
 
 
+    def shuffle(self, rng):
+        """
+        Shuffle the elements
+        :param rng: gsl.rng handle
+        :return: self
+        """
+        # shuffle
+        gsl.vector_shuffle(rng.rng, self.data)
+        # and return self
+        return self
+
     def mean(self, weights=None):
         """
         Compute the mean value of my elements, weighted by the optional {weights}
