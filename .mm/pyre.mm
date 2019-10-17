@@ -107,31 +107,6 @@ timers.ext.extern := pyre.lib journal.lib python
 timers.ext.lib.c++.flags += $($(compiler.c++).std.c++14)
 timers.ext.lib.prerequisites += journal.lib # pyre.lib is added automatically
 
-# cuda
-# the package
-cuda.pkg.root := packages/cuda/
-cuda.pkg.stem := cuda
-cuda.pkg.meta :=
-cuda.pkg.ext :=
-# the library
-cuda.lib.root := lib/cuda/
-cuda.lib.stem := cuda
-cuda.lib.extern := journal.lib
-cuda.lib.master := cuda.h
-cuda.lib.incdir := $(builder.dest.inc)pyre/cuda/
-cuda.lib.prerequisites += journal.lib
-cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
-cuda.lib.nvcc.flags += -std=c++11
-# the extension
-cuda.ext.root := extensions/cuda/
-cuda.ext.stem := cuda
-cuda.ext.pkg := cuda.pkg
-cuda.ext.wraps :=
-cuda.ext.capsule :=
-cuda.ext.extern := pyre.lib journal.lib cuda mpi python
-cuda.ext.lib.c++.flags += $($(compiler.c++).std.c++14)
-cuda.ext.lib.prerequisites += journal.lib pyre.lib # gsl.lib is added automatically
-
 # gsl
 # the package
 gsl.pkg.root := packages/gsl/
@@ -151,6 +126,33 @@ gsl.ext.lib.prerequisites += journal.lib pyre.lib mpi.ext # gsl.lib is added aut
 gsl.tst.pkg.stem := gsl
 gsl.tst.pkg.prerequisites := gsl.ext
 gsl.tst.pkg.root := tests/gsl/
+
+# cuda
+# the package
+cuda.pkg.root := packages/cuda/
+cuda.pkg.stem := cuda
+cuda.pkg.meta :=
+cuda.pkg.ext :=
+# the library
+cuda.lib.root := lib/cuda/
+cuda.lib.stem := pyrecuda
+cuda.lib.extern := journal.lib cuda
+cuda.lib.master := cuda.h
+cuda.lib.incdir := $(builder.dest.inc)pyre/cuda/
+cuda.lib.prerequisites += journal.lib
+cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
+cuda.lib.nvcc.flags += -std=c++11
+# the extension
+cuda.ext.root := extensions/cuda/
+cuda.ext.stem := cuda
+cuda.ext.pkg := cuda.pkg
+cuda.ext.wraps :=
+cuda.ext.incdir := $(builder.dest.inc)pyre/cuda/
+cuda.ext.capsule := capsules.h
+cuda.ext.capsule.destination := pyre/cuda/
+cuda.ext.extern := pyre.lib journal.lib gsl cuda mpi python numpy cuda.lib
+cuda.ext.lib.c++.flags += $($(compiler.c++).std.c++14)
+cuda.ext.lib.prerequisites += journal.lib pyre.lib gsl.ext # cuda.lib is added automatically
 
 # mpi
 # the package

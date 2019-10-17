@@ -23,7 +23,7 @@
 
 // access to cudalib definitions
 #include <pyre/cuda.h>
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 // copy to a numpy array
@@ -85,7 +85,7 @@ pyre::extensions::cuda::vector::fromnumpy(PyObject *, PyObject * args) {
 
     // perform copy
     cudaSafeCall(cudaMemcpy(dst->data, PyArray_DATA(src), dst->nbytes, cudaMemcpyDefault));
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
@@ -118,7 +118,7 @@ pyre::extensions::cuda::matrix::tonumpy(PyObject *, PyObject * args) {
     // copy the data
     cudaSafeCall(cudaMemcpy(PyArray_DATA(dst), m->data, m->nbytes, cudaMemcpyDefault));
     //cudaSafeCall(cudaDeviceSynchronize());
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
@@ -150,7 +150,7 @@ pyre::extensions::cuda::matrix::fromnumpy(PyObject *, PyObject * args) {
 
     // perform copy
     cudaSafeCall(cudaMemcpy(dst->data, PyArray_DATA(src), dst->nbytes, cudaMemcpyDefault));
-    
+
     // return None
     Py_INCREF(Py_None);
     return Py_None;
