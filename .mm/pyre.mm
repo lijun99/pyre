@@ -138,7 +138,7 @@ cuda.lib.root := lib/cuda/
 cuda.lib.stem := pyrecuda
 cuda.lib.extern := journal.lib cuda
 cuda.lib.master := cuda.h
-cuda.lib.incdir := $(builder.dest.inc)pyre/cuda/
+cuda.lib.incdir := $(builder.dest.inc)/pyre/cuda/
 cuda.lib.prerequisites += journal.lib
 cuda.lib.c++.flags += $($(compiler.c++).std.c++17)
 cuda.lib.nvcc.flags += -std=c++11
@@ -147,7 +147,6 @@ cuda.ext.root := extensions/cuda/
 cuda.ext.stem := cuda
 cuda.ext.pkg := cuda.pkg
 cuda.ext.wraps :=
-cuda.ext.incdir := $(builder.dest.inc)pyre/cuda/
 cuda.ext.capsule := capsules.h
 cuda.ext.capsule.destination := pyre/cuda/
 cuda.ext.extern := pyre.lib journal.lib gsl cuda mpi python numpy cuda.lib
