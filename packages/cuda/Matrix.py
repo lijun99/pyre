@@ -80,6 +80,26 @@ class Matrix:
         libcuda.matrix_copy(self.data, other.data)
         return self
 
+    def copy_to_device(self, out=None, dtype=None):
+        """
+        Copy a matrix to another gpu matrix with type conversion support
+        :param out: pre-allocated output matrix
+        :param dtype: output matrix data type if out is none
+        :return: out
+        """
+        # create an output matrix if not pre-allocated
+        if out is None:
+            dtype = dtype or self.dtype
+            out = Matrix(shape=self.shape, dtype=dtype)
+        if self.dtype == out.dtype :
+             # same type, use copy
+             libcuda.matrix_copy(out.data, self.data)
+        else :
+            # use copytile interface which supports type conversion
+            libcuda.matrix_copytile(out.data, (0,0), self.data, (0,0), out.shape)
+        # all done
+        return out
+
     def clone(self):
         """
         clone to a new matrix

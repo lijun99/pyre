@@ -516,25 +516,34 @@ copy_tile(Tout* const odata,  const size_t ldo,
                 const size_t m, const size_t n, // tile to be copied
                 cudaStream_t stream)
 */
-    switch(src->dtype) {
-    case PYCUDA_FLOAT:
-        cudalib::matrix::copy_tile<float, float>((float * const)dst->data, dst->size2,
+    if (src->dtype == PYCUDA_FLOAT && dst->dtype == PYCUDA_FLOAT) {
+            cudalib::matrix::copy_tile<float, float>((float * const)dst->data, dst->size2,
                                     drowStart, dcolStart,
                                     (const float * const)src->data, src->size2,
                                     srowStart, scolStart,
                                     rows, cols);
-        break;
-    case PYCUDA_DOUBLE:
+     } else if (src->dtype == PYCUDA_FLOAT && dst->dtype == PYCUDA_DOUBLE) {
+            cudalib::matrix::copy_tile<double, float>((double * const)dst->data, dst->size2,
+                                    drowStart, dcolStart,
+                                    (const float * const)src->data, src->size2,
+                                    srowStart, scolStart,
+                                    rows, cols);
+    } else if (src->dtype == PYCUDA_DOUBLE && dst->dtype == PYCUDA_FLOAT) {
+            cudalib::matrix::copy_tile<float, double>((float * const)dst->data, dst->size2,
+                                    drowStart, dcolStart,
+                                    (const double * const)src->data, src->size2,
+                                    srowStart, scolStart,
+                                    rows, cols);
+    } else if (src->dtype == PYCUDA_DOUBLE && dst->dtype == PYCUDA_DOUBLE) {
         cudalib::matrix::copy_tile<double, double>((double * const)dst->data, dst->size2,
                                     drowStart, dcolStart,
                                     (const double * const)src->data, src->size2,
                                     srowStart, scolStart,
                                     rows, cols);
-        break;
-    default:
+    } else {
         PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
         return 0;
-    } //end of switch
+    } // end of selections
 
     // return None
     Py_INCREF(Py_None);
