@@ -13,5 +13,9 @@ pyre_journalLib()
 pyre_pyreLib()
 # and the mpi layers
 pyre_mpiLib()
+# libpyrecuda
+if(WITH_CUDA)
+  pyre_cudaLib()
+endif()
 
 # end of file

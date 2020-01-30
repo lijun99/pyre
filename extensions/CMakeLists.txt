@@ -13,5 +13,9 @@ pyre_pyreModule()
 pyre_mpiModule()
 # and gsl
 pyre_gslModule()
+# cuda
+if(WITH_CUDA)
+  pyre_cudaModule()
+endif()
 
 # end of file
