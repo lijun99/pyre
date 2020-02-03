@@ -77,7 +77,9 @@ function(pyre_cudaModule)
   set(CUDA_LIBRARIES cublas cusolver curand)
   target_link_libraries(
     cudamodule PRIVATE
-    ${CUDA_LIBRARIES} pyre journal pyrecuda gsl
+    ${CUDA_LIBRARIES}
+    ${GSL_LIBRARIES}
+    pyre journal pyrecuda
     )
   # add the sources
   target_sources(cudamodule PRIVATE
