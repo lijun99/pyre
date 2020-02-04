@@ -113,7 +113,7 @@ function(pyre_cudaModule)
     # and the mpi libraries
     target_link_libraries(cudamodule PRIVATE ${MPI_CXX_LIBRARIES})
     # add the preprocessor macro
-    add_compile_definitions(WITH_MPI)
+    target_compile_definitions(cudamodule PRIVATE WITH_MPI)
   endif()
 
   # install the extension
