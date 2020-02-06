@@ -64,6 +64,8 @@ if (WITH_CUDA)
   if(CMAKE_CUDA_COMPILER)
     # turn it on
     enable_language(CUDA)
+    # enforce linker for CUDA modules; not properly set for some systems
+    set(CMAKE_CUDA_HOST_LINK_LAUNCHER ${CMAKE_CXX_COMPILER})
     message(STATUS "CUDA Toolkit found and CUDA support is enabled")
     # other cuda settings
     if(NOT DEFINED CMAKE_CUDA_STANDARD)
