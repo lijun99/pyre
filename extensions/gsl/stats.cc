@@ -99,11 +99,11 @@ gsl::stats::matrix_mean(PyObject *, PyObject * args)
 {
     // the arguments
     PyObject * matrixCapsule; // input matrix
-    PyObject *meanCapsule; // output mean vectors
+    PyObject * meanCapsule; // output mean vectors
     int axis;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!kO!:stats_matrix_mean",
+                                  args, "O!iO!:stats_matrix_mean",
                                   &PyCapsule_Type, &matrixCapsule,
                                   &axis,
                                   &PyCapsule_Type, &meanCapsule);
@@ -128,8 +128,6 @@ gsl::stats::matrix_mean(PyObject *, PyObject * args)
 
     // temporary results
     double mean;
-    // pointer to data
-    double * datap = (double *)m->data;
 
     size_t rows = m->size1;
     size_t cols = m->size2;
@@ -138,34 +136,46 @@ gsl::stats::matrix_mean(PyObject *, PyObject * args)
     // for different axis
     switch(axis) {
         case(0): // along row
+        {
+            // create a vector to save each column
+            gsl_vector * vec = gsl_vector_alloc(rows);
+            // iterate over cols
             for(size_t i=0; i<cols; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_col(vec, m, i);
                 // compute mean for each column
-                mean =  gsl_stats_mean(datap, tda, rows); // (data[], stride, total elements)
+                mean =  gsl_stats_mean(vec->data, 1, rows);
                 // set the values to output vectors
                 gsl_vector_set(meanVec, i, mean);
-                // move pointer to next column
-                datap++;
             }
             break;
+        }
         case(1): // along column
+        {
+            // create a vector to save each row
+            gsl_vector * vec = gsl_vector_alloc(cols);
+            // iterate over rows
             for(size_t i=0; i<rows; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_row(vec, m, i);
                 // compute (mean, sd) for each row
-                mean =  gsl_stats_mean(datap, 1, cols);
+                mean =  gsl_stats_mean(vec->data, 1, cols);
                 // set the val
                 gsl_vector_set(meanVec, i, mean);
-                // move pointer to next row
-                datap += tda;
             }
             break;
+        }
         default: // all elements
+        {
             if (tda!=cols) {
                 PyErr_SetString(PyExc_TypeError, "Not working for non-contiguous matrix!");
                 return (PyObject *) NULL;
             }
-            mean = gsl_stats_mean(datap, 1, cols*rows);
+            mean = gsl_stats_mean(m->data, 1, cols*rows);
             gsl_vector_set(meanVec, 0, mean);
+        }
     }
 
     // all done
@@ -184,12 +194,12 @@ PyObject *
 gsl::stats::matrix_mean_sd(PyObject *, PyObject * args)
 {
     // the arguments
-    PyObject * matrixCapsule; // input matrix
+    PyObject *matrixCapsule; // input matrix
     PyObject *meanCapsule, *sdCapsule; // output (mean, sd) vectors
     int axis;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!kO!O!:stats_matrix_mean_sd",
+                                  args, "O!iO!O!:stats_matrix_mean_sd",
                                   &PyCapsule_Type, &matrixCapsule,
                                   &axis,
                                   &PyCapsule_Type, &meanCapsule,
@@ -220,8 +230,6 @@ gsl::stats::matrix_mean_sd(PyObject *, PyObject * args)
 
     // temporary results
     double mean, sd;
-    // pointer to data
-    double * datap = (double *)m->data;
 
     size_t rows = m->size1;
     size_t cols = m->size2;
@@ -230,41 +238,53 @@ gsl::stats::matrix_mean_sd(PyObject *, PyObject * args)
     // for different axis
     switch(axis) {
         case(0): // along row
+        {
+            // create a vector to save each column
+            gsl_vector * vec = gsl_vector_alloc(rows);
+            // iterate over cols
             for(size_t i=0; i<cols; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_col(vec, m, i);
                 // compute mean for each column
-                mean =  gsl_stats_mean(datap, tda, rows); // (data[], stride, total elements)
+                mean =  gsl_stats_mean(vec->data, 1, rows); // (data[], stride, total elements)
                 // compute sd for each column
-                sd = gsl_stats_sd_m(datap, tda, rows, mean);
+                sd = gsl_stats_sd_m(vec->data, 1, rows, mean);
                 // set the values to output vectors
                 gsl_vector_set(meanVec, i, mean);
                 gsl_vector_set(sdVec, i, sd);
-                // move pointer to next column
-                datap++;
             }
             break;
+        }
         case(1): // along column
+        {
+            // create a vector to save each row
+            gsl_vector * vec = gsl_vector_alloc(cols);
+            // iterate over rows
             for(size_t i=0; i<rows; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_row(vec, m, i);
                 // compute (mean, sd) for each row
-                mean =  gsl_stats_mean(datap, 1, cols);
-                sd = gsl_stats_sd_m(datap, 1, cols, mean);
+                mean =  gsl_stats_mean(vec->data, 1, cols);
+                sd = gsl_stats_sd_m(vec->data, 1, cols, mean);
                 // set the val
                 gsl_vector_set(meanVec, i, mean);
                 gsl_vector_set(sdVec, i, sd);
-                // move pointer to next row
-                datap += tda;
             }
             break;
+        }
         default: // all elements
+        {
             if (tda!=cols) {
                 PyErr_SetString(PyExc_TypeError, "Not working for non-contiguous matrix!");
                 return (PyObject *) NULL;
             }
-            mean = gsl_stats_mean(datap, 1, cols*rows);
-            sd = gsl_stats_sd_m(datap, 1, cols*rows, mean);
+            mean = gsl_stats_mean(m->data, 1, cols*rows);
+            sd = gsl_stats_sd_m(m->data, 1, cols*rows, mean);
             gsl_vector_set(meanVec, 0, mean);
             gsl_vector_set(sdVec, 0, sd);
+        }
     }
 
     // all done
@@ -287,7 +307,7 @@ gsl::stats::matrix_mean_std(PyObject *, PyObject * args)
     int axis;
     // unpack the argument tuple
     int status = PyArg_ParseTuple(
-                                  args, "O!kO!O!:stats_matrix_mean_std",
+                                  args, "O!iO!O!:stats_matrix_mean_std",
                                   &PyCapsule_Type, &matrixCapsule,
                                   &axis,
                                   &PyCapsule_Type, &meanCapsule,
@@ -318,49 +338,58 @@ gsl::stats::matrix_mean_std(PyObject *, PyObject * args)
 
     // temporary results
     double mean, sd;
-    // pointer to data
-    double * datap = (double *)m->data;
 
     size_t rows = m->size1;
     size_t cols = m->size2;
     size_t tda = m->tda;
 
+
     // for different axis
     switch(axis) {
         case(0): // along row
+        {
+            // create a vector to save each column
+            gsl_vector * vec = gsl_vector_alloc(rows);
+            // iterate over cols
             for(size_t i=0; i<cols; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_col(vec, m, i);
                 // compute mean for each column
-                mean =  gsl_stats_mean(datap, tda, rows); // (data[], stride, total elements)
+                mean =  gsl_stats_mean(vec->data, 1, rows); // (data[], stride, total elements)
                 // compute sd for each column
-                sd = gsl_stats_sd_with_fixed_mean(datap, tda, rows, mean);
+                sd = gsl_stats_sd_with_fixed_mean(vec->data, 1, rows, mean);
                 // set the values to output vectors
                 gsl_vector_set(meanVec, i, mean);
                 gsl_vector_set(sdVec, i, sd);
-                // move pointer to next column
-                datap++;
             }
             break;
+        }
         case(1): // along column
+        {
+            // create a vector to save each row
+            gsl_vector * vec = gsl_vector_alloc(cols);
+            // iterate over rows
             for(size_t i=0; i<rows; ++i)
             {
+                // get the column as a  vector
+                gsl_matrix_get_row(vec, m, i);
                 // compute (mean, sd) for each row
-                mean =  gsl_stats_mean(datap, 1, cols);
-                sd = gsl_stats_sd_with_fixed_mean(datap, 1, cols, mean);
+                mean =  gsl_stats_mean(vec->data, 1, cols);
+                sd = gsl_stats_sd_with_fixed_mean(vec->data, 1, cols, mean);
                 // set the val
                 gsl_vector_set(meanVec, i, mean);
                 gsl_vector_set(sdVec, i, sd);
-                // move pointer to next row
-                datap += tda;
             }
             break;
+        }
         default: // all elements
             if (tda!=cols) {
                 PyErr_SetString(PyExc_TypeError, "Not working for non-contiguous matrix!");
                 return (PyObject *) NULL;
             }
-            mean = gsl_stats_mean(datap, 1, cols*rows);
-            sd = gsl_stats_sd_with_fixed_mean(datap, 1, cols*rows, mean);
+            mean = gsl_stats_mean(m->data, 1, cols*rows);
+            sd = gsl_stats_sd_with_fixed_mean(m->data, 1, cols*rows, mean);
             gsl_vector_set(meanVec, 0, mean);
             gsl_vector_set(sdVec, 0, sd);
     }

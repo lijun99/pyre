@@ -471,12 +471,14 @@ class Matrix:
         axis = None, 0, or 1, along which the mean are computed
         """
         # check axis
-        if axis is not None and axis !=0 and axis !=1:
-            raise IndexError("axis is out of range")
+        if axis is None:
+            axis = -1
+        if not axis in range(-1,2):
+            raise IndexError("axis must be None, 0, or 1.")
         # check whether output vector is already allocated
         if out is None:
             # mean, sd over flattened matrix
-            if axis is None:
+            if axis == -1:
                 mean = self.vector(shape=1)
             # mean, sd along row
             elif axis == 0:
@@ -495,7 +497,7 @@ class Matrix:
         # return the result
         return mean
 
-    def mean_sd(self, axis=None, out=None, sample=True):
+    def mean_sd(self, sample=True, axis=None, out=None):
         """
         Compute the mean values of matrix
         axis: int or None
@@ -507,12 +509,13 @@ class Matrix:
              when False, the population standard deviation is computed 1/N
         """
         # check axis
-        if axis is not None and axis !=0 and axis !=1:
-            raise IndexError("axis is out of range")
-
+        if axis is None:
+            axis = -1
+        if not axis in range(-1,2):
+            raise IndexError("axis must be None, 0, or 1.")
         if out is None:
             # mean, sd over flattened matrix
-            if axis is None:
+            if axis == -1:
                 mean = self.vector(shape=1)
                 sd = self.vector(shape=1)
             # mean, sd along row
