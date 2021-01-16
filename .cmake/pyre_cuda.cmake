@@ -74,7 +74,7 @@ function(pyre_cudaModule)
   # set the include directories
   target_include_directories(cudamodule PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${Python3_NumPy_INCLUDE_DIRS})
   # set the libraries to link against
-  set(CUDA_LIBRARIES cublas cusolver curand)
+  set(CUDA_LIBRARIES cublas cusolver curand cudart)
   target_link_libraries(
     cudamodule PRIVATE
     ${CUDA_LIBRARIES}
