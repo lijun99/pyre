@@ -3,7 +3,7 @@
 //
 // Lijun Zhu
 // california institute of technology
-// (c) 2016-2019  all rights reserved
+// (c) 2016-2021  all rights reserved
 //
 
 // my declaration
@@ -77,7 +77,7 @@ inverse_lu_cublas<double>(cublasHandle_t handle, double * const matrix, const si
     return INFOh;
 }
 
-// float sepcialization
+// float specialization
 template <>
 int
 inverse_lu_cublas<float>(cublasHandle_t handle, float * const matrix, const size_t n, cudaStream_t stream)
@@ -122,7 +122,7 @@ inverse_lu_cublas<float>(cublasHandle_t handle, float * const matrix, const size
     return INFOh;
 }
 
-// LU factorization
+// LU factorization with cusolver library
 // double specialization
 template<>
 int lu<double>(cusolverDnHandle_t solver_handle,
@@ -221,7 +221,7 @@ inverse_cholesky<double>(cusolverDnHandle_t solver_handle,
     int *devInfo;
     cudaSafeCall(cudaMalloc((void **)&devInfo, sizeof(int)));
 
-    // get work_size
+    // get work_size, typically 32
     // note that cusolver uses column-major
     cusolverSafeCall(cusolverDnDpotrf_bufferSize(solver_handle, uplo, n, matrix, n, &work_size));
 
@@ -229,6 +229,7 @@ inverse_cholesky<double>(cusolverDnHandle_t solver_handle,
     double *work;
     cudaSafeCall(cudaMalloc((void **)&work, work_size * sizeof(double)));
     cusolverSafeCall(cusolverDnDpotrf(solver_handle, uplo, n, matrix, n, work, work_size, devInfo));
+
     // check error
     int info;
     cudaSafeCall(cudaMemcpyAsync(&info, devInfo, sizeof(int), cudaMemcpyDeviceToHost, stream));
@@ -241,12 +242,16 @@ inverse_cholesky<double>(cusolverDnHandle_t solver_handle,
         cudaDeviceReset();
     }
 
-    // to be safe, allocate a new work for cusolverDnDpotri
+    // free working buffer
+    cudaSafeCall(cudaFree(work));
+
+    // potri uses a different work_size, typically 65536
     int info2=0;
     int * devInfo2;
     cudaSafeCall(cudaMalloc((void **)&devInfo2, sizeof(int)));
     int work_size2;
     cusolverSafeCall(cusolverDnDpotri_bufferSize(solver_handle, uplo, n, matrix, n, &work_size2));
+
     double * work2;
     cudaSafeCall(cudaMalloc((void **)&work2, work_size2 * sizeof(double)));
 
@@ -263,7 +268,6 @@ inverse_cholesky<double>(cusolverDnHandle_t solver_handle,
         cudaDeviceReset();
     }
 
-    cudaSafeCall(cudaFree(work));
     cudaSafeCall(cudaFree(work2));
     cudaSafeCall(cudaFree(devInfo));
     return info;
@@ -300,9 +304,12 @@ int inverse_cholesky<float>(cusolverDnHandle_t solver_handle,
         cudaDeviceReset();
     }
 
-    // to be safe, allocate a new work for cusolverDnDpotri
+    cudaSafeCall(cudaFree(work));
+
+    // allocate a new work for cusolverDnDpotri
     int work_size2;
     cusolverSafeCall(cusolverDnSpotri_bufferSize(solver_handle, uplo, n, matrix, n, &work_size2));
+
     float * work2;
     cudaSafeCall(cudaMalloc((void **)&work2, work_size2 * sizeof(float)));
 
@@ -319,10 +326,9 @@ int inverse_cholesky<float>(cusolverDnHandle_t solver_handle,
         cudaDeviceReset();
     }
 
-    cudaSafeCall(cudaFree(work));
+    // free working buffer
     cudaSafeCall(cudaFree(work2));
     cudaSafeCall(cudaFree(devInfo));
-    //std::cout << "inverse cholesky" << work_size << " " << work_size2 << "\n";
     return info;
 }
 
@@ -346,7 +352,7 @@ inverse_lu_cusolver<double>(cusolverDnHandle_t solver_handle,
     // note that cusolver uses column-major, or m is leading dimension
     cusolverSafeCall(cusolverDnDgetrf_bufferSize(solver_handle,  n, n, matrix, n, &work_size));
 
-    // allocate working space
+    // allocate working buffer
     double *work;
     cudaSafeCall(cudaMalloc((void **)&work, work_size * sizeof(double)));
     // LU decompose P*A = L*U
@@ -362,6 +368,9 @@ inverse_lu_cusolver<double>(cusolverDnHandle_t solver_handle,
         else
             fprintf(stderr, "LU factorization error:  U(%d, %d) =0 \n", info, info);
     }
+    // free working data
+    cudaSafeCall(cudaFree(work));
+
     // allocate an identity matrix
     double * dB;
     cudaSafeCall(cudaMalloc((void **)&dB, n*n*sizeof(double)));
@@ -379,8 +388,8 @@ inverse_lu_cusolver<double>(cusolverDnHandle_t solver_handle,
     }
     // copy solution back to A
     cudaSafeCall(cudaMemcpy(matrix, dB, n*n*sizeof(double), cudaMemcpyDeviceToDevice));
+
     // free working data
-    cudaSafeCall(cudaFree(work));
     cudaSafeCall(cudaFree(devInfo));
     cudaSafeCall(cudaFree(dB));
     return info;
@@ -420,6 +429,9 @@ inverse_lu_cusolver<float>(cusolverDnHandle_t solver_handle, float * const matri
         else
             fprintf(stderr, "LU factorization error:  U(%d, %d) =0 \n", info, info);
     }
+    // free working buffer
+    cudaSafeCall(cudaFree(work));
+
     // allocate an identity matrix
     float * dB;
     cudaSafeCall(cudaMalloc((void **)&dB, n*n*sizeof(float)));
@@ -438,7 +450,6 @@ inverse_lu_cusolver<float>(cusolverDnHandle_t solver_handle, float * const matri
     // copy solution back to A
     cudaSafeCall(cudaMemcpy(matrix, dB, n*n*sizeof(float), cudaMemcpyDeviceToDevice));
     // free working data
-    cudaSafeCall(cudaFree(work));
     cudaSafeCall(cudaFree(devInfo));
     cudaSafeCall(cudaFree(dB));
     return info;
