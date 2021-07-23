@@ -34,7 +34,7 @@ function(pyre_gslModule)
     # set the libraries to link against
     target_link_libraries(
       gslmodule PRIVATE
-      ${GSL_LIBRARIES} pyre journal
+      GSL::gsl ${BLAS_LIB_IMPORT} pyre journal
       )
     # add the sources
     target_sources(gslmodule PRIVATE

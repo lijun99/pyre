@@ -44,6 +44,14 @@ project(PYRE VERSION ${REPO_MAJOR}.${REPO_MINOR}.${REPO_MICRO} LANGUAGES CXX)
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
 # gsl
 find_package(GSL)
+# blas
+find_package(BLAS)
+# choose blas library
+if(${BLAS_FOUND})
+  set(BLAS_LIB_IMPORT BLAS::BLAS)
+else()
+  set(BLAS_LIB_IMPORT GSL::gslcblas)
+endif()
 # mpi
 find_package(MPI)
 # postgres
