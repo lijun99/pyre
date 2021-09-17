@@ -67,7 +67,7 @@ copy_tile(Tout* const odata,  const size_t ldo,
     const Tin * idata_start = idata + i_m_start*ldi + i_n_start;
     Tout * odata_start = odata + o_m_start*ldo + o_n_start;
     dim3 blockSize(16, 16, 1); // typically (16x16x1)
-    dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y), 1);
+    dim3 gridSize(IDIVUP(m, blockSize.x), IDIVUP(n, blockSize.y), 1);
     matrixops_kernels::_copy_tile<Tout, Tin><<<gridSize, blockSize, 0, stream>>>
         (odata_start, ldo, idata_start,ldi, m, n);
     cudaCheckError("matrixops_kernels::_copy_tile");
@@ -96,7 +96,7 @@ copy_indices(T * const odata,  const size_t ldo,
                 cudaStream_t stream)
 {
     dim3 blockSize(BDIMX, BDIMY); // typically (16x16x1)
-    dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y));
+    dim3 gridSize(IDIVUP(m, blockSize.x), IDIVUP(n, blockSize.y));
     matrixops_kernels::_copy_indices<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, ldi, m, n, indices);
     cudaCheckError("matrixops_kernels::_copy_indices");
@@ -136,6 +136,8 @@ template void cudalib::matrix::transpose<int>(int * const, const int *, const si
 
 
 // duplicate a vector to multiple rows of a matrix
+// idata is a vector
+// the first [m,n] elements of odata will be copied from idata[n*incx]
 template<typename T>
 void cudalib::matrix::
 duplicate_vector(T* const odata,  const size_t ldo,
@@ -145,7 +147,7 @@ duplicate_vector(T* const odata,  const size_t ldo,
 {
     // move input data pointer to the starting corner
     dim3 blockSize(16, 16, 1); // typically (16x16x1)
-    dim3 gridSize(IDIVUP(n, blockSize.x), IDIVUP(m, blockSize.y), 1);
+    dim3 gridSize(IDIVUP(m, blockSize.x), IDIVUP(n, blockSize.y), 1);
     matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
     cudaCheckError("matrixops_kernels::_duplicate_vector");
@@ -198,8 +200,8 @@ matrixops_kernels::_copy_tile(Tout * const odata,  const size_t ldo,
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < n && y < m)
-        odata[IDX2R(y, x, ldo)] = (Tout)idata[IDX2R(y, x, ldi)];
+    if(x < m && y < n)
+        odata[IDX2R(x, y, ldo)] = (Tout)idata[IDX2R(x, y, ldi)];
 }
 
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
@@ -212,9 +214,9 @@ matrixops_kernels::_copy_indices(T * const odata,  const size_t ldo,
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < n && y < m) {
+    if(x < m && y < n) {
         int index = indices[x];
-        odata[y*ldo + x] = idata[y*ldi+index];
+        odata[x*ldo + y] = idata[x*ldi+index];
     }
 }
 
@@ -278,8 +280,8 @@ matrixops_kernels::_duplicate_vector(T * const odata,  const size_t ldo,
 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < n && y < m)
-        odata[y*ldo + x] = idata[incx*x];
+    if(x < m && y < n)
+        odata[x*ldo + y] = idata[incx*y];
 }
 
 template<typename T>
