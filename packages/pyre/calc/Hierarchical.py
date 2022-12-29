@@ -138,7 +138,7 @@ class Hierarchical(SymbolTable):
             # hash it
             return context.hash(items=self.split(name=name))
         # if it is an iterable
-        if isinstance(name, collections.Iterable):
+        if isinstance(name, collections.abc.Iterable):
             # skip the split, just hash
             return context.hash(items=name)
         # otherwise
