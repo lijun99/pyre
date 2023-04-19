@@ -72,7 +72,10 @@ function(pyre_cudaModule)
   set_target_properties(cudamodule PROPERTIES LIBRARY_OUTPUT_NAME cuda)
   set_target_properties(cudamodule PROPERTIES SUFFIX ${PYTHON3_SUFFIX})
   # set the include directories
-  target_include_directories(cudamodule PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${Python3_NumPy_INCLUDE_DIRS})
+  target_include_directories(cudamodule PRIVATE
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    ${GSL_INCLUDE_DIRS}
+    ${Python3_NumPy_INCLUDE_DIRS})
   # set the libraries to link against
   set(CUDA_LIBRARIES cublas cusolver curand cudart)
   target_link_libraries(
