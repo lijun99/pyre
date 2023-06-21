@@ -13,7 +13,9 @@
 #include "cpu.h"
 
 // sysctl
+#if defined(HAVE_SYSCTL)
 #include <sys/sysctl.h>
+#endif
 
 // logical
 PyObject * pyre::extensions::host::logical(PyObject *, PyObject * args)
