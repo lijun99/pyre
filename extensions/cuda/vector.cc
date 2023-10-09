@@ -45,7 +45,7 @@ alloc(PyObject *, PyObject *args)
     cuda_vector * cvector= new cuda_vector{size, nullptr, nbytes, dtype};
 
     // allocate data on device
-    cudaSafeCall(cudaMalloc((void **)&(cvector->data), nbytes));
+    cudaSafeCall(cudaMallocManaged((void **)&(cvector->data), nbytes));
 
     // return as a capsule
     return PyCapsule_New(cvector, capsule_t, free);
