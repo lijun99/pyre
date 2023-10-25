@@ -10,6 +10,8 @@
 #include "matrixops.h"
 // cuda utitlies
 #include "cudalib.h"
+// other dependencies
+#include <stdexcept>
 
 
 namespace matrixops_kernels {
@@ -138,6 +140,7 @@ template void cudalib::matrix::transpose<int>(int * const, const int *, const si
 // duplicate a vector to multiple rows of a matrix
 // idata is a vector
 // the first [m,n] elements of odata will be copied from idata[n*incx]
+// m - rows, n - cols, ldo >= n
 template<typename T>
 void cudalib::matrix::
 duplicate_vector(T* const odata,  const size_t ldo,
@@ -145,9 +148,54 @@ duplicate_vector(T* const odata,  const size_t ldo,
                 const size_t m, const size_t n, // tile to be copied
                 cudaStream_t stream)
 {
-    // move input data pointer to the starting corner
-    dim3 blockSize(16, 16, 1); // typically (16x16x1)
-    dim3 gridSize(IDIVUP(m, blockSize.x), IDIVUP(n, blockSize.y), 1);
+
+    // NOTE: use default max grid size for new generation gpus
+    // TBD: use #s from getDeviceProp instead
+
+    // determine the gpu work size
+    dim3 blockSize, gridSize;
+
+    if (n <= 1024)
+    {
+        blockSize.x = 16; // along col
+        blockSize.y = 16; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        if(gridSize.x >= (1lu << 31))
+            throw std::length_error("the matrix duplicate: #cols exceeds the gpu limit");
+        // this should be less than 2^16-1
+        gridSize.y = IDIVUP(m, blockSize.y);
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix duplicate: #rows exceeds the gpu limit");
+        }
+    }
+    else {
+        // large size in cols
+        blockSize.x = 1024;
+        blockSize.y = 1; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        // this should be less than 2^16-1
+        gridSize.y = m;
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix duplicate: #rows exceeds the gpu limit");
+        }
+    }
+
     matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
     cudaCheckError("matrixops_kernels::_duplicate_vector");
@@ -275,13 +323,15 @@ _transpose(T* const odata, const T* const idata, const size_t nrows, const size_
 template<typename T>
 __global__ void
 matrixops_kernels::_duplicate_vector(T * const odata,  const size_t ldo,
-                const T * const idata, const size_t incx, const size_t m, const size_t n)
+                const T * const idata, const size_t incx, const size_t rows, const size_t cols)
 {
 
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if(x < m && y < n)
-        odata[x*ldo + y] = idata[incx*y];
+    int z = blockIdx.z;
+    int row = z * gridDim.y * blockDim.y + y;
+    if(col < cols && row < rows)
+        odata[row*ldo + col] = idata[incx*col];
 }
 
 template<typename T>
