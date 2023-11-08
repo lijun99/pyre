@@ -80,6 +80,11 @@ namespace pyre {
                   extern const char * const copy__doc__;
                   PyObject * copy(PyObject *, PyObject *);
 
+                  // copy a tile
+                  extern const char * const copytile__name__;
+                  extern const char * const copytile__doc__;
+                  PyObject * copytile(PyObject *, PyObject *);
+
 
             } // of namespace vector
         } // of namespace cuda

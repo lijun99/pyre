@@ -260,6 +260,52 @@ copy(PyObject *, PyObject * args) {
     return Py_None;
 }
 
+
+// copy a tile to another vector
+const char * const pyre::extensions::cuda::vector::copytile__name__ = "vector_copytile";
+const char * const pyre::extensions::cuda::vector::copytile__doc__ = "copy a tile vector to another (cuda)vector";
+
+PyObject *
+pyre::extensions::cuda::vector::
+copytile(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * srcObj;
+    PyObject * dstObj;
+    size_t srcStart, dstStart, tileSize;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!kkk:vector_togsl",
+                                  &PyCapsule_Type, &dstObj, &PyCapsule_Type, &srcObj,
+                                  &dstStart, &srcStart, &tileSize);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(srcObj, capsule_t) || !PyCapsule_IsValid(dstObj, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid vector capsule");
+        return 0;
+    }
+
+    // get the two vectors
+    cuda_vector * src = static_cast<cuda_vector *>(PyCapsule_GetPointer(srcObj, capsule_t));
+    cuda_vector * dst = static_cast<cuda_vector *>(PyCapsule_GetPointer(dstObj, capsule_t));
+
+    // check the types
+    if (src->dtype != dst->dtype) {
+        PyErr_SetString(PyExc_TypeError, "mismatch vector data types");
+        return 0;
+    }
+
+    // get the element size in bytes
+    size_t elementBytes = src->nbytes/src->size;
+    // perform copy
+    cudaSafeCall(cudaMemcpy(dst->data+dstStart*elementBytes,
+        src->data+srcStart*elementBytes, tileSize*elementBytes, cudaMemcpyDefault));
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 // add a+=b
 const char * const pyre::extensions::cuda::vector::iadd__name__ = "vector_iadd";
 const char * const pyre::extensions::cuda::vector::iadd__doc__ = "in-place addition of two vectors";

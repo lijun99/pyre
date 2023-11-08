@@ -71,6 +71,15 @@ class Vector:
         libcuda.vector_copy(self.data, other.data)
         return self
 
+    def copytile(self, src, start=0, src_start=0, size=None):
+        """
+        copy a tile of data from another vector
+        """
+        size = size or min(self.shape-start, src.shape-src_start)
+
+        libcuda.vector_copytile(self.data, src.data, start, src_start, size)
+        return self
+
     def clone(self):
         """
         clone to a new vector

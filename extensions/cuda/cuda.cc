@@ -84,6 +84,7 @@ namespace pyre {
                 {vector::filla__name__, vector::filla, METH_VARARGS, vector::filla__doc__},
                 {vector::fill__name__, vector::fill, METH_VARARGS, vector::fill__doc__},
                 {vector::copy__name__, vector::copy, METH_VARARGS, vector::copy__doc__},
+                {vector::copytile__name__, vector::copytile, METH_VARARGS, vector::copytile__doc__},
                 {vector::iadd__name__, vector::iadd, METH_VARARGS, vector::iadd__doc__},
                 {vector::isub__name__, vector::isub, METH_VARARGS, vector::isub__doc__},
                 {vector::imul__name__, vector::imul, METH_VARARGS, vector::imul__doc__},
