@@ -43,12 +43,28 @@ namespace cudalib {
                 const size_t iM, const size_t iN, // size of input
                 cudaStream_t stream=0);
 
+        // add a vector into rows in a matrix
+        template<typename T>
+        void add_vector(T* const odata,  const size_t ldo, // output matrix
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n,
+                cudaStream_t stream=0);
+
+        // subtract a vector into rows in a matrix
+        template<typename T>
+        void subtract_vector(T* const odata,  const size_t ldo, // output matrix
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n,
+                cudaStream_t stream=0);
+
+
         // duplicate a vector into rows in a matrix
         template<typename T>
         void duplicate_vector(T* const odata,  const size_t ldo, // output matrix
                 const T* const idata, const size_t incx,
                 const size_t m, const size_t n,
                 cudaStream_t stream=0);
+
 
         // copy upper triangle to lower or vice versa for nxn matrix
         template<typename T>

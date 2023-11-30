@@ -192,6 +192,32 @@ class Matrix:
         libcuda.matrix_copycols(dst.data, self.data, (batch, indices.shape), indices.data)
         return dst
 
+    def addVector(self, vector, size=None, incx=1, row_start=0):
+        """
+        Add a vector to matrix rows
+        :param vector:
+        :param size:
+        :param incx:
+        :param row_start:
+        :return:
+        """
+        size = size or self.shape
+        libcuda.matrix_add_vector(self.data, vector.data, row_start, size, incx)
+        return self
+
+    def subtractVector(self, vector, size=None, incx=1, row_start=0):
+        """
+        Subtract a vector from matrix rows
+        :param vector:
+        :param size:
+        :param incx:
+        :param row_start:
+        :return:
+        """
+        size = size or self.shape
+        libcuda.matrix_subtract_vector(self.data, vector.data, row_start, size, incx)
+        return self
+
 
     def duplicateVector(self, src, size=None, incx=1):
         """
@@ -204,7 +230,6 @@ class Matrix:
         size = size if size is not None else (self.shape[0], src.shape)
         libcuda.matrix_duplicate_vector(self.data, src.data, 0, size, incx)
         return self
-
 
 
     def copy_triangle(self, fill=1):

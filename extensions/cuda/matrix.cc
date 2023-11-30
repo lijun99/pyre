@@ -605,6 +605,143 @@ copycols(PyObject *, PyObject * args) {
     return Py_None;
 }
 
+
+// add a vector
+const char * const pyre::extensions::cuda::matrix::add_vector__name__ = "matrix_add_vector";
+const char * const pyre::extensions::cuda::matrix::add_vector__doc__ = "add a vector to another matrix";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+add_vector(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * srcObj;
+    PyObject * dstObj;
+    size_t row_start, rows, cols, incx;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!k(kk)k:matrix_add_vector",
+                                  &PyCapsule_Type, &dstObj,
+                                  &PyCapsule_Type, &srcObj,
+                                  &row_start, &rows, &cols, &incx);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(srcObj, pyre::extensions::cuda::vector::capsule_t)
+        || !PyCapsule_IsValid(dstObj, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix/vector capsule");
+        return 0;
+    }
+
+    // get the two matrixs
+    cuda_vector * src = static_cast<cuda_vector *>(PyCapsule_GetPointer(srcObj, pyre::extensions::cuda::vector::capsule_t));
+    cuda_matrix * dst = static_cast<cuda_matrix *>(PyCapsule_GetPointer(dstObj, capsule_t));
+
+    // perform copy of submatrix
+    /*
+    template<typename T>
+    void cudalib::matrix::
+    add_vector(T* const odata,  const size_t ldo,
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n, // tile to be copied
+                cudaStream_t stream)
+    */
+    switch(src->dtype) {
+    case PYCUDA_FLOAT:
+    {
+        float * dst_start = (float *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::add_vector<float>(dst_start, dst->size2,
+                                    (const float * const)src->data, incx,
+                                    rows, cols);
+        break;
+    }
+    case PYCUDA_DOUBLE:
+    {
+        double *dst_start = (double *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::add_vector<double>(dst_start, dst->size2,
+                                    (const double * const)src->data, incx,
+                                    rows, cols);
+        break;
+    }
+    default:
+        PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
+        return 0;
+    } //end of switch
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+// subtract a vector
+const char * const pyre::extensions::cuda::matrix::subtract_vector__name__ = "matrix_subtract_vector";
+const char * const pyre::extensions::cuda::matrix::subtract_vector__doc__ = "subtract a vector to another matrix";
+
+PyObject *
+pyre::extensions::cuda::matrix::
+subtract_vector(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * srcObj;
+    PyObject * dstObj;
+    size_t row_start, rows, cols, incx;
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!k(kk)k:matrix_subtract_vector",
+                                  &PyCapsule_Type, &dstObj,
+                                  &PyCapsule_Type, &srcObj,
+                                  &row_start, &rows, &cols, &incx);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(srcObj, pyre::extensions::cuda::vector::capsule_t)
+        || !PyCapsule_IsValid(dstObj, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid matrix/vector capsule");
+        return 0;
+    }
+
+    // get the two matrixs
+    cuda_vector * src = static_cast<cuda_vector *>(PyCapsule_GetPointer(srcObj, pyre::extensions::cuda::vector::capsule_t));
+    cuda_matrix * dst = static_cast<cuda_matrix *>(PyCapsule_GetPointer(dstObj, capsule_t));
+
+    // perform copy of submatrix
+    /*
+    template<typename T>
+    void cudalib::matrix::
+    subtract_vector(T* const odata,  const size_t ldo,
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n, // tile to be copied
+                cudaStream_t stream)
+    */
+    switch(src->dtype) {
+    case PYCUDA_FLOAT:
+    {
+        float * dst_start = (float *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::subtract_vector<float>(dst_start, dst->size2,
+                                    (const float * const)src->data, incx,
+                                    rows, cols);
+        break;
+    }
+    case PYCUDA_DOUBLE:
+    {
+        double *dst_start = (double *)dst->data;
+        dst_start += row_start*dst->size2;
+        cudalib::matrix::subtract_vector<double>(dst_start, dst->size2,
+                                    (const double * const)src->data, incx,
+                                    rows, cols);
+        break;
+    }
+    default:
+        PyErr_SetString(PyExc_TypeError, "data types other than float/double are not supported yet");
+        return 0;
+    } //end of switch
+
+    // return None
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 // duplicate a vector
 const char * const pyre::extensions::cuda::matrix::duplicate_vector__name__ = "matrix_duplicate_vector";
 const char * const pyre::extensions::cuda::matrix::duplicate_vector__doc__ = "copy duplicates of vector to another matrix";

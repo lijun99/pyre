@@ -83,6 +83,16 @@ namespace pyre {
                   extern const char * const copycols__doc__;
                   PyObject * copycols(PyObject *, PyObject *);
 
+                  // add a vector
+                  extern const char * const add_vector__name__;
+                  extern const char * const add_vector__doc__;
+                  PyObject * add_vector(PyObject *, PyObject *);
+
+                  // subtract a vector
+                  extern const char * const subtract_vector__name__;
+                  extern const char * const subtract_vector__doc__;
+                  PyObject * subtract_vector(PyObject *, PyObject *);
+
                   // duplicate a vector
                   extern const char * const duplicate_vector__name__;
                   extern const char * const duplicate_vector__doc__;

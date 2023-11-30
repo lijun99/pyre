@@ -104,6 +104,8 @@ namespace pyre {
                 {matrix::copy__name__, matrix::copy, METH_VARARGS, matrix::copy__doc__},
                 {matrix::copytile__name__, matrix::copytile, METH_VARARGS, matrix::copytile__doc__},
                 {matrix::copycols__name__, matrix::copycols, METH_VARARGS, matrix::copycols__doc__},
+                {matrix::add_vector__name__, matrix::add_vector, METH_VARARGS, matrix::add_vector__doc__},
+                {matrix::subtract_vector__name__, matrix::subtract_vector, METH_VARARGS, matrix::subtract_vector__doc__},
                 {matrix::duplicate_vector__name__, matrix::duplicate_vector, METH_VARARGS, matrix::duplicate_vector__doc__},
                 {matrix::tovector__name__, matrix::tovector, METH_VARARGS, matrix::tovector__doc__},
                 {matrix::transpose__name__, matrix::transpose, METH_VARARGS, matrix::transpose__doc__},

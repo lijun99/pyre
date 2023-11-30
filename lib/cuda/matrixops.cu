@@ -30,6 +30,14 @@ namespace matrixops_kernels {
     __global__ void _transpose(T* const odata, const T* const idata, const size_t nrows, const size_t ncols);
 
     template<typename T>
+    __global__ void _add_vector(T * const odata,  const size_t ldo,
+                const T * const idata, const size_t incx, const size_t m, const size_t n);
+
+    template<typename T>
+    __global__ void _subtract_vector(T * const odata,  const size_t ldo,
+                const T * const idata, const size_t incx, const size_t m, const size_t n);
+
+    template<typename T>
     __global__ void _duplicate_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t m, const size_t n);
 
@@ -135,7 +143,145 @@ template void cudalib::matrix::transpose<float>(float * const, const float *, co
 template void cudalib::matrix::transpose<double>(double * const, const double *, const size_t, const size_t, cudaStream_t);
 template void cudalib::matrix::transpose<int>(int * const, const int *, const size_t, const size_t, cudaStream_t);
 
+// add a vector to multiple rows of a matrix
+// idata is a vector
+// the first [m_start+m,n] elements of odata will be added from idata[n*incx]
+// m - rows, n - cols, ldo >= n
+template<typename T>
+void cudalib::matrix::
+add_vector(T* const odata,  const size_t ldo,
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n, // tile to be copied
+                cudaStream_t stream)
+{
 
+    // NOTE: use default max grid size for new generation gpus
+    // TBD: use #s from getDeviceProp instead
+
+    // determine the gpu work size
+    dim3 blockSize, gridSize;
+
+    if (n <= 1024)
+    {
+        blockSize.x = 16; // along col
+        blockSize.y = 16; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        if(gridSize.x >= (1lu << 31))
+            throw std::length_error("the matrix add vector: #cols exceeds the gpu limit");
+        // this should be less than 2^16-1
+        gridSize.y = IDIVUP(m, blockSize.y);
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix add vector: #rows exceeds the gpu limit");
+        }
+    }
+    else {
+        // large size in cols
+        blockSize.x = 1024;
+        blockSize.y = 1; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        // this should be less than 2^16-1
+        gridSize.y = m;
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix add vector: #rows exceeds the gpu limit");
+        }
+    };
+
+    matrixops_kernels::_add_vector<T><<<gridSize, blockSize, 0, stream>>>
+        (odata, ldo, idata, incx, m, n);
+    cudaCheckError("matrixops_kernels::_add_vector");
+}
+
+// explicit instantiation for shared library
+template void cudalib::matrix::add_vector<float>(float * const, const size_t,
+    const float * const, const size_t, const size_t, const size_t, cudaStream_t);
+template void cudalib::matrix::add_vector<double>(double * const, const size_t,
+    const double * const, const size_t, const size_t, const size_t, cudaStream_t);
+
+// subtract a vector to multiple rows of a matrix
+// idata is a vector
+// the first [m_start+m,n] elements of odata will be subtracted from idata[n*incx]
+// m - rows, n - cols, ldo >= n
+template<typename T>
+void cudalib::matrix::
+subtract_vector(T* const odata,  const size_t ldo,
+                const T* const idata, const size_t incx,
+                const size_t m, const size_t n, // tile to be copied
+                cudaStream_t stream)
+{
+
+    // NOTE: use default max grid size for new generation gpus
+    // TBD: use #s from getDeviceProp instead
+
+    // determine the gpu work size
+    dim3 blockSize, gridSize;
+
+    if (n <= 1024)
+    {
+        blockSize.x = 16; // along col
+        blockSize.y = 16; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        if(gridSize.x >= (1lu << 31))
+            throw std::length_error("the matrix subtract vector: #cols exceeds the gpu limit");
+        // this should be less than 2^16-1
+        gridSize.y = IDIVUP(m, blockSize.y);
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix subtract vector: #rows exceeds the gpu limit");
+        }
+    }
+    else {
+        // large size in cols
+        blockSize.x = 1024;
+        blockSize.y = 1; // along row
+        blockSize.z = 1; // dummy
+        // this should be less than 2^31 -1
+        gridSize.x = IDIVUP(n, blockSize.x);
+        // this should be less than 2^16-1
+        gridSize.y = m;
+        gridSize.z = 1; // dummy
+        // if gridy exceeds the limit
+        if(gridSize.y >= 65535) {
+            // use gridz to help
+            gridSize.y = 65535;
+            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
+            if(gridSize.z >= 65535)
+                throw std::length_error("the matrix subtract vector: #rows exceeds the gpu limit");
+        }
+    }
+
+    matrixops_kernels::_subtract_vector<T><<<gridSize, blockSize, 0, stream>>>
+        (odata, ldo, idata, incx, m, n);
+    cudaCheckError("matrixops_kernels::_subtract_vector");
+}
+
+// explicit instantiation for shared library
+template void cudalib::matrix::subtract_vector<float>(float * const, const size_t,
+    const float * const, const size_t, const size_t, const size_t, cudaStream_t);
+template void cudalib::matrix::subtract_vector<double>(double * const, const size_t,
+    const double * const, const size_t, const size_t, const size_t, cudaStream_t);
 
 // duplicate a vector to multiple rows of a matrix
 // idata is a vector
@@ -316,6 +462,40 @@ _transpose(T* const odata, const T* const idata, const size_t nrows, const size_
         odata[transposed_offset2] = tile[irow][blockDim.x + icol];
     }
 }
+
+
+// add a vector idata from the (first few) rows of odata
+//
+template<typename T>
+__global__ void
+matrixops_kernels::_add_vector(T * const odata,  const size_t ldo,
+                const T * const idata, const size_t incx, const size_t rows, const size_t cols)
+{
+
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    int z = blockIdx.z;
+    int row = z * gridDim.y * blockDim.y + y;
+    if(col < cols && row < rows)
+        odata[row*ldo + col] += idata[incx*col];
+}
+
+// subtract a vector idata from the (first few) rows of odata
+//
+template<typename T>
+__global__ void
+matrixops_kernels::_subtract_vector(T * const odata,  const size_t ldo,
+                const T * const idata, const size_t incx, const size_t rows, const size_t cols)
+{
+
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    int z = blockIdx.z;
+    int row = z * gridDim.y * blockDim.y + y;
+    if(col < cols && row < rows)
+        odata[row*ldo + col] -= idata[incx*col];
+}
+
 
 // To achieve high bandwidth, use x for leading dimension (col) to match the thread block major
 // copy rows x cols from idata to odata
