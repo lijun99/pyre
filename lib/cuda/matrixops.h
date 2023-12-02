@@ -72,8 +72,6 @@ namespace cudalib {
                 const size_t n, const int fill=1,
                 cudaStream_t stream=0);
 
-        void test_matrix_routine() {}
-
     } // of namespace matrix
 } // of namespace cudalib
 
