@@ -10,7 +10,6 @@
 #ifndef cudalib_cutimer_h
 #define cudalib_cutimer_h
 
-#include "error.h"
 #include <cuda_runtime.h>
 
 // place everything in the local namespace
@@ -32,15 +31,9 @@ public:
     #define cudaEventDisableTiming 0x02
     #define cudaEventInterprocess 0x04
     */
-    cuTimer(unsigned int flags=1)  {
-        cudaSafeCall(cudaEventCreateWithFlags(&_start, flags));
-        cudaSafeCall(cudaEventCreateWithFlags(&_end, flags));
-    }
+    cuTimer(unsigned int flags=1);
     // destructor
-    ~cuTimer() {
-        cudaSafeCall(cudaEventDestroy(_start));
-        cudaSafeCall(cudaEventDestroy(_end));
-    }
+    ~cuTimer();
     cuTimer & start();
     cuTimer & stop();
     float duration();

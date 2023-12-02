@@ -8,6 +8,19 @@
 
 // my declaration
 #include "timer.h"
+#include "error.h"
+
+// constructor
+cudalib::cuTimer::cuTimer(unsigned int flags)   {
+        cudaSafeCall(cudaEventCreateWithFlags(&_start, flags));
+        cudaSafeCall(cudaEventCreateWithFlags(&_end, flags));
+}
+
+// destructor
+cudalib::cuTimer::~cuTimer() {
+        cudaSafeCall(cudaEventDestroy(_start));
+        cudaSafeCall(cudaEventDestroy(_end));
+}
 
 cudalib::cuTimer &
 cudalib::cuTimer::start()

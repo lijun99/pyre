@@ -38,7 +38,7 @@ function(pyre_cudaLib)
 
   # the libpyrecuda target
   add_library(pyrecuda SHARED)
-  # define the core macro
+  # enable separate compilation of device code
   set_target_properties(pyrecuda PROPERTIES CUDA_SEPERABLE_COMPILATION ON)
   # set the include directories
   target_include_directories(
@@ -73,6 +73,7 @@ function(pyre_cudaModule)
   set_target_properties(cudamodule PROPERTIES SUFFIX ${PYTHON3_SUFFIX})
   # set the include directories
   target_include_directories(cudamodule PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lib>
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     ${GSL_INCLUDE_DIRS}
     ${Python3_NumPy_INCLUDE_DIRS})
@@ -106,7 +107,7 @@ function(pyre_cudaModule)
   # copy the capsule definitions to the staging area
   file(
     COPY cuda/capsules.h
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../lib/pyre/cuda
+    DESTINATION ${CMAKE_BINARY_DIR}/lib/pyre/cuda
     )
   if (${MPI_FOUND})
     # add the MPI aware sources to the pile
