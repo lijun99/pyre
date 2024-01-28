@@ -62,10 +62,12 @@ namespace pyre {
                 { setDevice__name__, setDevice, METH_VARARGS, setDevice__doc__ },
                 { resetDevice__name__, resetDevice, METH_VARARGS, resetDevice__doc__ },
                 { synchronizeDevice__name__, synchronizeDevice, METH_VARARGS, synchronizeDevice__doc__ },
+                { getDeviceCount__name__, getDeviceCount, METH_VARARGS, getDeviceCount__doc__ },
 
                 // device discovery and other administrative tasks
                 // discover
                 { discover__name__, discover, METH_VARARGS, discover__doc__ },
+                { initializeDevice__name__, initializeDevice, METH_VARARGS, initializeDevice__doc__ },
 
                 // stream
                 {stream::alloc__name__, stream::alloc, METH_VARARGS, stream::alloc__name__},

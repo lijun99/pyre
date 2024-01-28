@@ -29,6 +29,12 @@ namespace pyre {
             const char * const synchronizeDevice__doc__ = "synchronize the current device";
             PyObject * synchronizeDevice(PyObject *, PyObject *);
 
+            // getDeviceCount
+            const char * const getDeviceCount__name__ = "getDeviceCount";
+            const char * const getDeviceCount__doc__ = "get the device count";
+            PyObject * getDeviceCount(PyObject *, PyObject *);
+
+
 
         } // of namespace cuda
     } // of namespace extensions

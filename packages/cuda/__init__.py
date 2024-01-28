@@ -9,7 +9,7 @@
 # attempt to
 try:
     # load the extension module
-    from . import cuda
+    from . import cuda as libcuda
 # if this fails
 except ImportError:
     # not much to do...
@@ -36,6 +36,7 @@ cuda.registerExceptions(exceptions)
 
 # build the device manager
 from .DeviceManager import DeviceManager
+from .Device import Device
 manager = DeviceManager()
 devices = manager.devices
 device = manager.device
@@ -56,5 +57,10 @@ def current_device():
     """
     return manager.current_device
 
+def use_device(id=0):
+    """
+    use a gpu device {id}
+    """
+    return manager.device(id)
 
 # end of file

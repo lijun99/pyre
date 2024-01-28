@@ -11,7 +11,6 @@ class Device:
     The property sheet of a CUDA capable device
     """
 
-
     # attributes
     id = None
     name = ""
@@ -42,15 +41,13 @@ class Device:
     _curand_generator = None
     _cusolverdn_handle = None
 
-    def initialize(self):
+    def initialize(self, id=0):
         """
         Initialize device and its handles
         """
+        self.id = id
         libcuda.setDevice(self.id)
-        #if self.cublas_handle is None:
-        #    self.cublas_handle = cublas.create_handle()
-        #if self.curand_generator is None:
-        #    self.curand_generator = curand.create_generator()
+        # all done
         return self
 
     @property

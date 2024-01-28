@@ -14,6 +14,14 @@ namespace pyre {
     namespace extensions {
         namespace cuda {
 
+            // create a device sheet - to be used by the following two routines
+            PyObject * createDeviceSheet(PyObject *, const int);
+
+            // initial device - with more details
+            const char * const initializeDevice__name__ = "initializeDevice";
+            const char * const initializeDevice__doc__ = "device initialization";
+            PyObject * initializeDevice(PyObject *, PyObject *);
+
             // discover
             const char * const discover__name__ = "discover";
             const char * const discover__doc__ = "device discovery";

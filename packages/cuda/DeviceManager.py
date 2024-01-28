@@ -10,6 +10,7 @@
 from pyre.patterns.Singleton import Singleton
 # the extension with CUDA support
 from . import cuda as libcuda
+from .Device import Device
 
 
 # declaration
@@ -17,7 +18,6 @@ class DeviceManager(metaclass=Singleton):
     """
     The singleton that provides access to what is known about CUDA capable hardware
     """
-
 
     # public data
     count = 0
@@ -33,27 +33,32 @@ class DeviceManager(metaclass=Singleton):
         """
         Set {did} as the default device
         """
-        self.current_device=self.devices[did]
-        self.current_device.initialize()
+        if (len(self.devices) != 0):
+            self.current_device=self.devices[did]
+        else:
+            self.current_device = libcuda.initializeDevice(Device, did)
         # delegate to the extension module
-        
         return self.current_device
 
-
-    # meta-methods
-    def __init__(self, **kwds):
-        # chain up
-        super().__init__(**kwds)
-
+    def discover(self):
+        """
+        discover all cuda devices
+        """
         # grab the device class
         from .Device import Device
         # build the device list and attach it
         self.devices = libcuda.discover(Device)
         # set the count
         self.count = len(self.devices)
-        # set a default device 
-        #if self.count > 0: 
-        #    self.current_device = self.device() 
+
+
+    # meta-methods
+    def __init__(self, discover=False, **kwds):
+        # chain up
+        super().__init__(**kwds)
+        # if managing all devices
+        if (discover):
+            self.discover()
         # all done
         return
 

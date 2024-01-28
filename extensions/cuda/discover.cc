@@ -23,6 +23,174 @@
 // helpers
 inline int coresPerProcessor(int major, int minor);
 
+// create a device sheet for device id = index
+PyObject *
+pyre::extensions::cuda::
+createDeviceSheet(PyObject *sheetFactory, const int index)
+{
+    // make a device property sheet
+    PyObject *sheet = PyObject_CallObject(sheetFactory, 0);
+
+    // start decorating: first the device id
+    PyObject_SetAttrString(sheet, "id", PyLong_FromLong(index));
+
+    // storage for the device properties
+    cudaDeviceProp prop;
+    // set the current device
+    cudaSetDevice(index);
+    // get its properties
+    cudaGetDeviceProperties(&prop, index);
+
+    // get the name of the device
+    PyObject_SetAttrString(sheet, "name", PyUnicode_FromString(prop.name));
+
+    // build a representation of the compute capability
+    PyObject * capability = PyTuple_New(2);
+    PyTuple_SET_ITEM(capability, 0, PyLong_FromLong(prop.major));
+    PyTuple_SET_ITEM(capability, 1, PyLong_FromLong(prop.minor));
+    // attach it
+    PyObject_SetAttrString(sheet, "capability", capability);
+
+    // version info
+    int version;
+    PyObject *vtuple;
+    // get the driver version
+    cudaDriverGetVersion(&version);
+    // build a rep for the driver version
+    vtuple = PyTuple_New(2);
+    PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(version/1000));
+    PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong((version%100)/10));
+    // attach it
+    PyObject_SetAttrString(sheet, "driverVersion", vtuple);
+
+    // get the runtime version
+    cudaRuntimeGetVersion(&version);
+    // build a rep for the runtime version
+    vtuple = PyTuple_New(2);
+    PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(version/1000));
+    PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong((version%100)/10));
+    // attach it
+    PyObject_SetAttrString(sheet, "runtimeVersion", vtuple);
+
+    // attach the compute mode
+    PyObject_SetAttrString(sheet, "computeMode", PyLong_FromLong(prop.computeMode));
+
+    // attach the managed memory flag
+    PyObject_SetAttrString(sheet,
+                           "managedMemory",
+                           PyBool_FromLong(prop.managedMemory));
+    // attach the unified addressing flag
+    PyObject_SetAttrString(sheet,
+                           "unifiedAddressing",
+                           PyBool_FromLong(prop.unifiedAddressing));
+
+    // get the number of multiprocessors
+    int processors = prop.multiProcessorCount;
+    // attach
+    PyObject_SetAttrString(sheet, "processors", PyLong_FromLong(processors));
+    // get number of cores per multiprocessor
+    int cores = coresPerProcessor(prop.major, prop.minor);
+    // attach
+    PyObject_SetAttrString(sheet, "coresPerProcessor", PyLong_FromLong(cores));
+
+    // total global memory
+    PyObject_SetAttrString(sheet,
+                           "globalMemory",
+                           PyLong_FromUnsignedLong(prop.totalGlobalMem));
+    // total constant memory
+    PyObject_SetAttrString(sheet,
+                           "constantMemory",
+                           PyLong_FromUnsignedLong(prop.totalConstMem));
+    // shared memory per block
+    PyObject_SetAttrString(sheet,
+                           "sharedMemoryPerBlock",
+                           PyLong_FromUnsignedLong(prop.sharedMemPerBlock));
+
+    // warp size
+    PyObject_SetAttrString(sheet,
+                           "warp",
+                           PyLong_FromLong(prop.warpSize));
+    // maximum number of threads per block
+    PyObject_SetAttrString(sheet,
+                           "maxThreadsPerBlock",
+                           PyLong_FromLong(prop.maxThreadsPerBlock));
+    // maximum number of threads per processor
+    PyObject_SetAttrString(sheet,
+                           "maxThreadsPerProcessor",
+                           PyLong_FromLong(prop.maxThreadsPerMultiProcessor));
+
+    // build a rep for the max grid dimensions
+    vtuple = PyTuple_New(3);
+    // populate it
+    PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(prop.maxGridSize[0]));
+    PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong(prop.maxGridSize[1]));
+    PyTuple_SET_ITEM(vtuple, 2, PyLong_FromLong(prop.maxGridSize[2]));
+    // attach it
+    PyObject_SetAttrString(sheet, "maxGrid", vtuple);
+
+    // build a rep for the max thread block dimensions
+    vtuple = PyTuple_New(3);
+    // populate it
+    PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(prop.maxThreadsDim[0]));
+    PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong(prop.maxThreadsDim[1]));
+    PyTuple_SET_ITEM(vtuple, 2, PyLong_FromLong(prop.maxThreadsDim[2]));
+    // attach it
+    PyObject_SetAttrString(sheet, "maxThreadBlock", vtuple);
+
+    // all done
+    return sheet;
+}
+
+// device discovery for one device
+PyObject *
+pyre::extensions::cuda::
+initializeDevice(PyObject *, PyObject *args)
+{
+    // the device property class; it's supposed to be a class, so it's an instance of {type}
+    PyObject *sheetFactory;
+
+    // device id
+    int index;
+
+    // my journal channel; for debugging
+    pyre::journal::debug_t channel("cuda");
+
+    // if I were not passed the expected arguments
+    if (!PyArg_ParseTuple(args, "O!i:initializeDevice", &PyType_Type, &sheetFactory, &index)) {
+        // raise an exception
+        return 0;
+    }
+
+    // attempt to grab the device
+    cudaError_t status = cudaSetDevice(index);
+    // if anything went wrong
+    if (status != cudaSuccess) {
+        // make an error channel
+        pyre::journal::error_t error("cuda");
+        // show me
+        error
+            << pyre::journal::at(__HERE__)
+            << "while reserving device " << index << ": "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+
+        // create an exception object
+        // prep the constructor arguments
+        PyObject * args = PyTuple_New(0);
+        PyObject * kwds = Py_BuildValue("{s:s}", "description", cudaGetErrorName(status));
+        // build it
+        PyObject * exception = PyObject_Call(Error, args, kwds);
+        // mark it as the pending exception
+        PyErr_SetObject(Error, exception);
+        // and bail
+        return 0;
+    }
+
+    // create and return the device sheet
+    return createDeviceSheet(sheetFactory, index);
+}
+
+
 // device discovery
 PyObject *
 pyre::extensions::cuda::
@@ -68,116 +236,13 @@ discover(PyObject *, PyObject *args)
 
     // loop over the available devices
     for (int index=0; index<count; ++index) {
-        // make a device property sheet
-        PyObject *sheet = PyObject_CallObject(sheetFactory, 0);
-        // add it to our pile
-        PyTuple_SET_ITEM(result, index, sheet);
 
-        // start decorating: first the device id
-        PyObject_SetAttrString(sheet, "id", PyLong_FromLong(index));
+        // create a device sheet
+        PyObject *sheet = createDeviceSheet(sheetFactory, index);
 
-        // storage for the device properties
-        cudaDeviceProp prop;
-        // set the current device
-        cudaSetDevice(index);
-        // get its properties
-        cudaGetDeviceProperties(&prop, index);
-
-        // get the name of the device
-        PyObject_SetAttrString(sheet, "name", PyUnicode_FromString(prop.name));
-
-        // build a representation of the compute capability
-        PyObject * capability = PyTuple_New(2);
-        PyTuple_SET_ITEM(capability, 0, PyLong_FromLong(prop.major));
-        PyTuple_SET_ITEM(capability, 1, PyLong_FromLong(prop.minor));
-        // attach it
-        PyObject_SetAttrString(sheet, "capability", capability);
-
-        // version info
-        int version;
-        PyObject *vtuple;
-        // get the driver version
-        cudaDriverGetVersion(&version);
-        // build a rep for the driver version
-        vtuple = PyTuple_New(2);
-        PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(version/1000));
-        PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong((version%100)/10));
-        // attach it
-        PyObject_SetAttrString(sheet, "driverVersion", vtuple);
-
-        // get the runtime version
-        cudaRuntimeGetVersion(&version);
-        // build a rep for the runtime version
-        vtuple = PyTuple_New(2);
-        PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(version/1000));
-        PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong((version%100)/10));
-        // attach it
-        PyObject_SetAttrString(sheet, "runtimeVersion", vtuple);
-
-        // attach the compute mode
-        PyObject_SetAttrString(sheet, "computeMode", PyLong_FromLong(prop.computeMode));
-
-        // attach the managed memory flag
-        PyObject_SetAttrString(sheet,
-                               "managedMemory",
-                               PyBool_FromLong(prop.managedMemory));
-        // attach the unified addressing flag
-        PyObject_SetAttrString(sheet,
-                               "unifiedAddressing",
-                               PyBool_FromLong(prop.unifiedAddressing));
-
-        // get the number of multiprocessors
-        int processors = prop.multiProcessorCount;
-        // attach
-        PyObject_SetAttrString(sheet, "processors", PyLong_FromLong(processors));
-        // get number of cores per multiprocessor
-        int cores = coresPerProcessor(prop.major, prop.minor);
-        // attach
-        PyObject_SetAttrString(sheet, "coresPerProcessor", PyLong_FromLong(cores));
-
-        // total global memory
-        PyObject_SetAttrString(sheet,
-                               "globalMemory",
-                               PyLong_FromUnsignedLong(prop.totalGlobalMem));
-        // total constant memory
-        PyObject_SetAttrString(sheet,
-                               "constantMemory",
-                               PyLong_FromUnsignedLong(prop.totalConstMem));
-        // shared memory per block
-        PyObject_SetAttrString(sheet,
-                               "sharedMemoryPerBlock",
-                               PyLong_FromUnsignedLong(prop.sharedMemPerBlock));
-
-        // warp size
-        PyObject_SetAttrString(sheet,
-                               "warp",
-                               PyLong_FromLong(prop.warpSize));
-        // maximum number of threads per block
-        PyObject_SetAttrString(sheet,
-                               "maxThreadsPerBlock",
-                               PyLong_FromLong(prop.maxThreadsPerBlock));
-        // maximum number of threads per processor
-        PyObject_SetAttrString(sheet,
-                               "maxThreadsPerProcessor",
-                               PyLong_FromLong(prop.maxThreadsPerMultiProcessor));
-
-        // build a rep for the max grid dimensions
-        vtuple = PyTuple_New(3);
-        // populate it
-        PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(prop.maxGridSize[0]));
-        PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong(prop.maxGridSize[1]));
-        PyTuple_SET_ITEM(vtuple, 2, PyLong_FromLong(prop.maxGridSize[2]));
-        // attach it
-        PyObject_SetAttrString(sheet, "maxGrid", vtuple);
-
-        // build a rep for the max thread block dimensions
-        vtuple = PyTuple_New(3);
-        // populate it
-        PyTuple_SET_ITEM(vtuple, 0, PyLong_FromLong(prop.maxThreadsDim[0]));
-        PyTuple_SET_ITEM(vtuple, 1, PyLong_FromLong(prop.maxThreadsDim[1]));
-        PyTuple_SET_ITEM(vtuple, 2, PyLong_FromLong(prop.maxThreadsDim[2]));
-        // attach it
-        PyObject_SetAttrString(sheet, "maxThreadBlock", vtuple);
+        if (sheet != nullptr)
+            // add it to our pile
+            PyTuple_SET_ITEM(result, index, sheet);
     }
 
     // return the device tuple
