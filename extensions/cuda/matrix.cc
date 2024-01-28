@@ -47,7 +47,7 @@ alloc(PyObject *, PyObject *args)
     cuda_matrix *cmatrix= new cuda_matrix{size1, size2, size1*size2, nullptr, nbytes, dtype};
 
     // allocate data on device
-    cudaSafeCall(cudaMallocManaged((void **)&(cmatrix->data), nbytes));
+    cudaSafeCall(cudaMalloc((void **)&(cmatrix->data), nbytes));
 
     // return as a capsule
     return PyCapsule_New(cmatrix, capsule_t, free);
