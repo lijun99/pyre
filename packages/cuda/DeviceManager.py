@@ -56,6 +56,8 @@ class DeviceManager(metaclass=Singleton):
     def __init__(self, discover=False, **kwds):
         # chain up
         super().__init__(**kwds)
+        # get device count
+        self.count = libcuda.getDeviceCount()
         # if managing all devices
         if (discover):
             self.discover()
