@@ -149,7 +149,7 @@ pyre::extensions::cuda::matrix::fromnumpy(PyObject *, PyObject * args) {
     cuda_matrix * dst = static_cast<cuda_matrix *>(PyCapsule_GetPointer(dstObj, capsule_t));
 
     // perform copy
-    cudaSafeCall(cudaMemcpy(dst->data, PyArray_DATA(src), dst->nbytes, cudaMemcpyDefault));
+    cudaSafeCall(cudaMemcpy(dst->data, PyArray_DATA(src), PyArray_SIZE(src) * dst->nbytes / dst->size, cudaMemcpyDefault));
 
     // return None
     Py_INCREF(Py_None);
