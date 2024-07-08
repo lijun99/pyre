@@ -53,7 +53,7 @@ class Stats:
         return out
 
     def l1norm(x, size=None, stride=1):
-        """
+        r"""
         L1 norm of a vector \sum_i |x_i|
         :return:
         """
@@ -66,7 +66,7 @@ class Stats:
         return out
 
     def l2norm(x, size=None, stride=1):
-        """
+        r"""
         L2 norm of a vector \sqrt{\sum_i x_i^2}
         :return:
         """

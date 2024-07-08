@@ -41,7 +41,7 @@ class Journal(pyre.component, family="journal.executive"):
         # configuration store
         for category in categories:
             # build the key prefix
-            prefix = "journal\." + category.severity
+            prefix = r"journal\." + category.severity
             # identify the relevant keys
             for info, node in ns.find(pattern=prefix):
                 # get the value
