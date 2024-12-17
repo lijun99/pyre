@@ -185,6 +185,7 @@ int lu<float>(cusolverDnHandle_t solver_handle,
     // note that cusolver uses column-major, or m is leading dimension
     cusolverSafeCall(cusolverDnSgetrf_bufferSize(solver_handle,  m, n, matrix, lda, &work_size));
 
+    std::cout << "lu float work size" << work_size << "\n";
     //
     float *work;
     cudaSafeCall(cudaMalloc((void **)&work, work_size * sizeof(float)));
@@ -236,9 +237,9 @@ inverse_cholesky<double>(cusolverDnHandle_t solver_handle,
 
     if(info!=0) {
         if(info <0)
-            fprintf(stderr, "Chelosky factorization error:  the %d-th parameter is wrong (not counting the handle)\n", -info);
+            fprintf(stderr, "Cholesky factorization error:  the %d-th parameter is wrong (not counting the handle)\n", -info);
         else
-            fprintf(stderr, "Chelosky factorization error:  the leading minor of order %d is not positive definite\n", info);
+            fprintf(stderr, "Cholesky factorization error:  the leading minor of order %d is not positive definite\n", info);
         cudaDeviceReset();
     }
 

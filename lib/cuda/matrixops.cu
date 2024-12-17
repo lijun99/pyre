@@ -12,6 +12,7 @@
 #include "cudalib.h"
 // other dependencies
 #include <stdexcept>
+#include <iostream>
 
 
 namespace matrixops_kernels {
@@ -156,51 +157,22 @@ add_vector(T* const odata,  const size_t ldo,
 {
 
     // NOTE: use default max grid size for new generation gpus
-    // TBD: use #s from getDeviceProp instead
-
+    if(m >= (1lu << 31))
+        throw std::length_error("the matrix duplicate: #cols exceeds the gpu limit");
     // determine the gpu work size
-    dim3 blockSize, gridSize;
+    int blockSize;
+    int gridSize = m;
 
-    if (n <= 1024)
-    {
-        blockSize.x = 16; // along col
-        blockSize.y = 16; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        if(gridSize.x >= (1lu << 31))
-            throw std::length_error("the matrix add vector: #cols exceeds the gpu limit");
-        // this should be less than 2^16-1
-        gridSize.y = IDIVUP(m, blockSize.y);
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix add vector: #rows exceeds the gpu limit");
-        }
-    }
-    else {
-        // large size in cols
-        blockSize.x = 1024;
-        blockSize.y = 1; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        // this should be less than 2^16-1
-        gridSize.y = m;
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix add vector: #rows exceeds the gpu limit");
-        }
-    };
+    if(n >= 1024)
+        blockSize = 1024;
+    else if(n >= 512)
+        blockSize = 512;
+    else if(n>=256)
+        blockSize = 256;
+    else if(n >= 128)
+        blockSize = 128;
+    else
+        blockSize = 64;
 
     matrixops_kernels::_add_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
@@ -226,51 +198,22 @@ subtract_vector(T* const odata,  const size_t ldo,
 {
 
     // NOTE: use default max grid size for new generation gpus
-    // TBD: use #s from getDeviceProp instead
-
+    if(m >= (1lu << 31))
+        throw std::length_error("the matrix duplicate: #cols exceeds the gpu limit");
     // determine the gpu work size
-    dim3 blockSize, gridSize;
+    int blockSize;
+    int gridSize = m;
 
-    if (n <= 1024)
-    {
-        blockSize.x = 16; // along col
-        blockSize.y = 16; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        if(gridSize.x >= (1lu << 31))
-            throw std::length_error("the matrix subtract vector: #cols exceeds the gpu limit");
-        // this should be less than 2^16-1
-        gridSize.y = IDIVUP(m, blockSize.y);
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix subtract vector: #rows exceeds the gpu limit");
-        }
-    }
-    else {
-        // large size in cols
-        blockSize.x = 1024;
-        blockSize.y = 1; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        // this should be less than 2^16-1
-        gridSize.y = m;
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix subtract vector: #rows exceeds the gpu limit");
-        }
-    }
+    if(n >= 1024)
+        blockSize = 1024;
+    else if(n >= 512)
+        blockSize = 512;
+    else if(n>=256)
+        blockSize = 256;
+    else if(n >= 128)
+        blockSize = 128;
+    else
+        blockSize = 64;
 
     matrixops_kernels::_subtract_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
@@ -296,51 +239,23 @@ duplicate_vector(T* const odata,  const size_t ldo,
 {
 
     // NOTE: use default max grid size for new generation gpus
-    // TBD: use #s from getDeviceProp instead
 
+    if(m >= (1lu << 31))
+        throw std::length_error("the matrix duplicate: #cols exceeds the gpu limit");
     // determine the gpu work size
-    dim3 blockSize, gridSize;
+    int blockSize;
+    int gridSize = m;
 
-    if (n <= 1024)
-    {
-        blockSize.x = 16; // along col
-        blockSize.y = 16; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        if(gridSize.x >= (1lu << 31))
-            throw std::length_error("the matrix duplicate: #cols exceeds the gpu limit");
-        // this should be less than 2^16-1
-        gridSize.y = IDIVUP(m, blockSize.y);
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix duplicate: #rows exceeds the gpu limit");
-        }
-    }
-    else {
-        // large size in cols
-        blockSize.x = 1024;
-        blockSize.y = 1; // along row
-        blockSize.z = 1; // dummy
-        // this should be less than 2^31 -1
-        gridSize.x = IDIVUP(n, blockSize.x);
-        // this should be less than 2^16-1
-        gridSize.y = m;
-        gridSize.z = 1; // dummy
-        // if gridy exceeds the limit
-        if(gridSize.y >= 65535) {
-            // use gridz to help
-            gridSize.y = 65535;
-            gridSize.z = IDIVUP(m, blockSize.y*gridSize.y);
-            if(gridSize.z >= 65535)
-                throw std::length_error("the matrix duplicate: #rows exceeds the gpu limit");
-        }
-    }
+    if(n >= 1024)
+        blockSize = 1024;
+    else if(n >= 512)
+        blockSize = 512;
+    else if(n>=256)
+        blockSize = 256;
+    else if(n >= 128)
+        blockSize = 128;
+    else
+        blockSize = 64;
 
     matrixops_kernels::_duplicate_vector<T><<<gridSize, blockSize, 0, stream>>>
         (odata, ldo, idata, incx, m, n);
@@ -471,12 +386,8 @@ __global__ void
 matrixops_kernels::_add_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t rows, const size_t cols)
 {
-
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int z = blockIdx.z;
-    int row = z * gridDim.y * blockDim.y + y;
-    if(col < cols && row < rows)
+    int row = blockIdx.x;
+    for(int col=threadIdx.x; col<cols; col+=blockDim.x)
         odata[row*ldo + col] += idata[incx*col];
 }
 
@@ -487,12 +398,8 @@ __global__ void
 matrixops_kernels::_subtract_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t rows, const size_t cols)
 {
-
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int z = blockIdx.z;
-    int row = z * gridDim.y * blockDim.y + y;
-    if(col < cols && row < rows)
+    int row = blockIdx.x;
+    for(int col=threadIdx.x; col<cols; col+=blockDim.x)
         odata[row*ldo + col] -= idata[incx*col];
 }
 
@@ -505,12 +412,8 @@ __global__ void
 matrixops_kernels::_duplicate_vector(T * const odata,  const size_t ldo,
                 const T * const idata, const size_t incx, const size_t rows, const size_t cols)
 {
-
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int z = blockIdx.z;
-    int row = z * gridDim.y * blockDim.y + y;
-    if(col < cols && row < rows)
+    int row = blockIdx.x;
+    for(int col=threadIdx.x; col<cols; col+=blockDim.x)
         odata[row*ldo + col] = idata[incx*col];
 }
 
