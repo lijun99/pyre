@@ -133,6 +133,62 @@ class cuBlas:
         # all done
         return C
 
+
+    def gemmex(A, B, handle=None, out=None, alpha=1.0, beta=0.0, rows=None,
+            transa=0, transb=0):
+        """
+        Matrix-matrix multiplication (no complex support yet)
+        Args: op(A) with shape(m,k), op(B) with shape (k, n) in row major
+              op(A) = A if transa=0, else A^T
+              rows - only first rows are calculated (rows <=m)
+        Returns: out (C) with shape (m, n)
+                C = alpha A B + beta C
+        """
+
+        handle = handle or cuBlas.get_current_handle()
+
+        if alpha == 0.0 and beta == 1.0 :
+            # nothing to do
+            return
+
+        # C(m, n) = op(A) (m, k) x op(B) (k, n) in row major
+        # to cublas with col major
+        # C^T(n,m) = opB^T (n, k) opA^T (k, m)
+
+        # get the dimension
+        n = B.shape[1] if transb == 0 else B.shape[0]
+        if transa == 0:
+            k = A.shape[1]
+            m = rows or A.shape[0]
+        else:
+            k = A.shape[0]
+            m = rows or A.shape[1]
+
+        # create a output matrix if not provided
+        C = out or Matrix(shape=(m,n), dtype=A.dtype)
+
+
+        # convert to cublas notations
+        ctransa = transb
+        ctransb = transa
+        cA = B
+        cB = A
+
+        cm = n
+        ck = k
+        cn = m
+
+        # call cublas_gemm
+        libcuda.cublas_gemmex(handle, ctransa, ctransb,
+                            cm, cn, ck, alpha,
+                            cA.data, cA.shape[1],
+                            cB.data, cB.shape[1],
+                            beta,
+                            C.data, C.shape[1])
+
+        # all done
+        return C
+
     def gemv(A, x, handle=None, out=None, trans = 0, alpha=1.0, beta=0.0):
         """
         y(out) = alpha op(A) x + beta y

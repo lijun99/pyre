@@ -74,6 +74,9 @@ namespace statistics_kernels {
     __global__ void _linfnorm(T * const norm, const T* const gdata, const size_t n, const size_t stride);
 
     template<typename T, const int blockSize>
+    __global__ void _maxerror(T * const error, const T* const gdata1, const T* const gdata2, const size_t n, const size_t stride);
+
+    template<typename T, const int blockSize>
     __global__ void _covariance(T * const cov, const T* const v1, const T* const v1mean,
         const T * const v2, const T* const v2mean, const size_t n, const size_t stride);
 
@@ -414,6 +417,35 @@ T Linfnorm(const T* const gdata, const size_t n, const size_t stride, cudaStream
 // explicit instantiation
 template float Linfnorm <float>(const float* const, const size_t, const size_t, cudaStream_t);
 template double Linfnorm <double>(const double* const, const size_t, const size_t, cudaStream_t);
+
+template <typename T>
+T max_relative_error(const T* const gdata1, const T* const gdata2, const size_t n, const size_t stride, cudaStream_t stream)
+{
+    // work data
+    T * gnorm, norm;
+    cudaSafeCall(cudaMalloc((void **)&gnorm, sizeof(T)));
+    cudaSafeCall(cudaMemset(gnorm, 0, sizeof(T)));
+
+    // kernel launch parameters
+    const int blockSize = BLOCKDIM;
+    const int gridSize = IDIVUP(n, blockSize);
+
+    // call cuda kernel
+    statistics_kernels::_maxerror<T, blockSize> <<<gridSize, blockSize, 0, stream>>>
+        (gnorm, gdata1, gdata2, n, stride);
+    cudaCheckError("statistics_kernels::_maxerror");
+
+    // copy result to cpu
+    cudaSafeCall(cudaMemcpyAsync(&norm, gnorm, sizeof(T), cudaMemcpyDefault, stream));
+    // free work data
+    cudaSafeCall(cudaFree(gnorm));
+    // all done
+    return norm;
+}
+
+// explicit instantiation
+template float max_relative_error <float>(const float* const, const float* const, const size_t, const size_t, cudaStream_t);
+template double max_relative_error <double>(const double* const, const double* const, const size_t, const size_t, cudaStream_t);
 
 
 // covariance cov(x,y) = E[(x-E[x])(y-E[y])] = E(xy) -E(x)E(y)
@@ -868,6 +900,32 @@ __global__ void _linfnorm(T * const norm, const T* const gdata, const size_t n, 
 
     if (cta.thread_rank() == 0) {
         ::atomicMax(norm, local_max);
+    }
+}
+
+
+template<typename T, const int blockSize>
+__global__ void _maxerror(T * const error, const T* const gdata1, const T* const gdata2, const size_t n, const size_t stride)
+{
+    // shared memory with blockSize
+    __shared__ T sdata[blockSize];
+    // get thread id
+    auto cta = cg::this_thread_block();
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    // define the relative error lambda function
+    auto relative_error = [](T a, T b) {
+        return abs(a - b) / max(abs(a), abs(b));
+    };
+
+    T local_max = (tid < n) ? relative_error(gdata1[tid*stride], gdata2[tid*stride]): 0;
+
+    sdata[cta.thread_rank()] = local_max;
+    cg::sync(cta);
+    // call block max
+    local_max = reduction_kernels::max_reduce_block<T>(sdata, cta);
+
+    if (cta.thread_rank() == 0) {
+        ::atomicMax(error, local_max);
     }
 }
 

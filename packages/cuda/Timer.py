@@ -9,6 +9,7 @@
 
 # externals
 from . import cuda as libcuda # the extension
+import contextlib
 
 class Timer:
     """
@@ -33,17 +34,20 @@ class Timer:
         elapsedtime = libcuda.timer_time(self.capsule)
         return elapsedtime
 
-    def profile(self, process, *args, **kwargs):
+    @contextlib.contextmanager
+    def profile(self):
         """
-        Profile a process
-        :param process:
-        :param args:
-        :return:
+        Profile a block of code using a context manager.
+
+        Example usage:
+        with timer.profile():
+            # Code to be timed
+            my_function(arg1, arg2)
+            another_operation()
+        elapsed_time = timer.elapsed_time
         """
-        # start the timer
         self.start()
-        process(*args, **kwargs)
-        elapsedtime = self.stop()
-        return elapsedtime
+        yield
+        self.elapsed_time = self.stop()
 
 #end of file

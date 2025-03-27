@@ -147,6 +147,7 @@ namespace pyre {
                 {cublas::trmv__name__, cublas::trmv, METH_VARARGS, cublas::trmv__doc__},
                 {cublas::trmm__name__, cublas::trmm, METH_VARARGS, cublas::trmm__doc__},
                 {cublas::gemm__name__, cublas::gemm, METH_VARARGS, cublas::gemm__doc__},
+                {cublas::gemmex__name__, cublas::gemmex, METH_VARARGS, cublas::gemmex__doc__},
                 {cublas::gemv__name__, cublas::gemv, METH_VARARGS, cublas::gemv__doc__},
                 {cublas::symm__name__, cublas::symm, METH_VARARGS, cublas::symm__doc__},
                 {cublas::symv__name__, cublas::symv, METH_VARARGS, cublas::symv__doc__},
@@ -173,6 +174,7 @@ namespace pyre {
                 {stats::L1norm__name__, stats::L1norm, METH_VARARGS, stats::L1norm__doc__},
                 {stats::L2norm__name__, stats::L2norm, METH_VARARGS, stats::L2norm__doc__},
                 {stats::Linfnorm__name__, stats::Linfnorm, METH_VARARGS, stats::Linfnorm__doc__},
+                {stats::max_relative_error__name__, stats::max_relative_error, METH_VARARGS, stats::max_relative_error__doc__},
 
                 {stats::vector_covariance__name__, stats::vector_covariance, METH_VARARGS, stats::vector_covariance__doc__},
                 {stats::vector_correlation__name__, stats::vector_correlation, METH_VARARGS, stats::vector_correlation__doc__},

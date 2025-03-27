@@ -61,6 +61,9 @@ namespace cudalib {
         template <typename T>
         T Linfnorm(const T* const gdata, const size_t n, const size_t stride=1, cudaStream_t stream=0);
 
+        template <typename T>
+        T max_relative_error(const T* const gdata1, const T* const gdata2, const size_t n, const size_t stride=1, cudaStream_t stream=0);
+
         // covariance for vector
         template <typename T>
         T covariance(const T* const v1, const T* const v2, const size_t n, const size_t stride=1,

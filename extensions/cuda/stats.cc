@@ -748,6 +748,53 @@ Linfnorm(PyObject *, PyObject * args) {
     return PyFloat_FromDouble(result);
 }
 
+// max relative error between two vectors/matrices
+const char * const pyre::extensions::cuda::stats::max_relative_error__name__ = "max_relative_error";
+const char * const pyre::extensions::cuda::stats::max_relative_error__doc__ =
+    "max relative error between two vectors/matrices";
+
+PyObject *
+pyre::extensions::cuda::stats::
+max_relative_error(PyObject *, PyObject * args) {
+    // the arguments
+    PyObject * v1Capsule, * v2Capsule;
+    size_t n, stride;
+
+    double result;
+
+    // unpack the argument tuple
+    int status = PyArg_ParseTuple(
+                                  args, "O!O!kk:max_relative_error",
+                                  &PyCapsule_Type, &v1Capsule, &PyCapsule_Type, &v2Capsule, &n, &stride);
+    // if something went wrong
+    if (!status) return 0;
+    // bail out if the two capsules are not valid
+    if (!PyCapsule_IsValid(v1Capsule, vector_capsule_t) || !PyCapsule_IsValid(v2Capsule, vector_capsule_t) )
+    {
+        PyErr_SetString(PyExc_TypeError, "invalid vector capsule");
+        return 0;
+    }
+
+    // get the vector
+    const vector_t * v1 = static_cast<const vector_t *>(PyCapsule_GetPointer(v1Capsule, vector_capsule_t));
+    const vector_t * v2 = static_cast<const vector_t *>(PyCapsule_GetPointer(v2Capsule, vector_capsule_t));
+
+    // for different data type
+    switch(v1->dtype) {
+    case PYCUDA_DOUBLE: //double
+        result = cudalib::statistics::max_relative_error<double>((const double *)v1->data, (const double *)v2->data, n, stride);
+        break;
+    case PYCUDA_FLOAT: // float
+        result = (double) cudalib::statistics::max_relative_error<float>((const float *)v1->data, (const float *)v2->data, n, stride);
+            break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "unsupported vector data type");
+        return 0;
+    }
+    // all done, return
+    return PyFloat_FromDouble(result);
+}
+
 // vector vector_covariance
 const char * const pyre::extensions::cuda::stats::vector_covariance__name__ = "vector_covariance";
 const char * const pyre::extensions::cuda::stats::vector_covariance__doc__ =

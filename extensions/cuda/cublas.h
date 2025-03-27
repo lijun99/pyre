@@ -57,6 +57,11 @@ namespace pyre {
                 extern const char * const gemm__doc__;
                 PyObject * gemm(PyObject *, PyObject *);
 
+                //  matrix-matrix product (GemmEx)
+                extern const char * const gemmex__name__;
+                extern const char * const gemmex__doc__;
+                PyObject * gemmex(PyObject *, PyObject *);
+
                 //  matrix-vector product
                 extern const char * const gemv__name__;
                 extern const char * const gemv__doc__;

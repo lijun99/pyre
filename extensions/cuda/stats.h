@@ -105,6 +105,11 @@ namespace pyre {
                 extern const char * const Linfnorm__doc__;
                 PyObject * Linfnorm(PyObject *, PyObject *);
 
+                // max relative error between two vectors/matrices
+                extern const char * const max_relative_error__name__;
+                extern const char * const max_relative_error__doc__;
+                PyObject * max_relative_error(PyObject *, PyObject *);
+
 
 
             } // of namespace stats

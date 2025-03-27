@@ -169,5 +169,25 @@ class Stats:
 
         return out
 
+    def max_relative_error(x, y):
+        """
+        compute maximum difference between elements of two vectors or matrices
+        max{|x_i - y_i|/max(|x_i|, |y_i|)}
+        :param x, y: two vectors or matrices
+        :return: the maximum relative error
+        """
+        # vectors
+        if isinstance(x, vector) and isinstance (y, vector):
+            # find the max diff using L-Infinity norm
+            out = libcuda.Linfnorm(x.data, y.data, x.size, 1)
+        elif isinstance(x, matrix) and isinstance(y, matrix):
+            xv = x.tovector()
+            yv = y.tovector()
+            out = libcuda.max_relative_error(xv.data, yv.data, xv.size, 1)
+        else:
+            raise NotImplementedError("unsupported type {}".format(type(x)))
+
+        return out
+
 
 # end of file

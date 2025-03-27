@@ -16,7 +16,7 @@ def test():
     samples = 100
     parameters = 512
 
-    precision = 'float32' # or 'float64'
+    precision = 'float64' # or 'float64'
     #### GSL ####
 
     # make a sigma and init its values
@@ -80,20 +80,20 @@ def test():
 
     ### compare ####
     print("Copying between cpu and gpu, maxerror: ",
-        cuda.stats.max_diff(dsigma, cuda.matrix(source=sigma, dtype=precision)))
+        cuda.stats.max_relative_error(dsigma, cuda.matrix(source=sigma, dtype=precision)))
 
     dsigma_chol.copy_triangle(fill=1)
-    print("Cholesky factorization, max difference between cpu/gpu results: ",
-          cuda.stats.max_diff(dsigma_chol, cuda.matrix(source=sigma_chol, dtype=precision)))
+    print("Cholesky factorization, max relative difference between cpu/gpu results: ",
+          cuda.stats.max_relative_error(dsigma_chol, cuda.matrix(source=sigma_chol, dtype=precision)))
 
     print("trmm, max difference between cpu/gpu results: ",
-          cuda.stats.max_diff(djump, cuda.matrix(source=jump, dtype=precision)))
+          cuda.stats.max_relative_error(djump, cuda.matrix(source=jump, dtype=precision)))
 
     print("gemm, max difference between cpu/gpu results: ",
-          cuda.stats.max_diff(dproduct, cuda.matrix(source=product, dtype=precision)))
+          cuda.stats.max_relative_error(dproduct, cuda.matrix(source=product, dtype=precision)))
 
     print("matrix inverse, max difference between cpu/gpu results: ",
-          cuda.stats.max_diff(dsigma_inv, cuda.matrix(source=sigma_inv, dtype=precision)))
+          cuda.stats.max_relative_error(dsigma_inv, cuda.matrix(source=sigma_inv, dtype=precision)))
 
 
     # determinant

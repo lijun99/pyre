@@ -46,7 +46,12 @@ def mat_mul(A, B, C, handle, iteration):
         cuda.cublas.gemm(A, B, out=C, handle=handle)
     return
 
-def benchmark2(m, n, k, device=0, precision='float32', iteration=10):
+def mat_mul_tensor_core(A, B, C, handle, iteration):
+    for i in range(iteration):
+        cuda.cublas.gemmex(A, B, out=C, handle=handle)
+    return
+
+def benchmark2(m, n, k, device=0, precision='float32', iteration=10, use_tensor=False):
     """
     benchmarking gemm
     generate C(m,n) = A(m,k) x B(k, n)
@@ -67,23 +72,36 @@ def benchmark2(m, n, k, device=0, precision='float32', iteration=10):
     # record the start time
 
     #record the stop time
-    elapsedtime = gtimer.profile(mat_mul, matrix_A, matrix_B, matrix_C, cublas_hanlde, iteration)
-
+    with gtimer.profile():
+        if use_tensor:
+            mat_mul_tensor_core(matrix_A, matrix_B, matrix_C, cublas_hanlde, iteration)
+        else:
+            mat_mul(matrix_A, matrix_B, matrix_C, cublas_hanlde, iteration)
     # get the average computation time (in s)
-    time = elapsedtime/iteration/1e3
+    time = gtimer.elapsed_time/iteration/1e3
 
     # all done
     return time
 
 def test():
 
+    # check FP64 capability
+    n = 6
+    flops_ref = (2 ** 14) * (2 ** 14) * (2 ** n) * 2 / (10 ** 12)
+    time3 = benchmark2(2 ** n, 2 ** 14, 2 ** 14, precision='float64')
+    skip_dp = (flops_ref/time3 < 2.0)
+
     print("Profiling gemm for two matrices (2**n, 2**14)x(2**14, 2**14)") 
-    print("n time(SP) time(DP) Tflops(SP) Tflops(DP)")
-    for n in range(15):
-        flops_ref = 2**14*2**14*2**n*2/10**12;
-        time1=benchmark2(2**n, 2**14, 2**14, precision='float32')
-        time2=benchmark2(2**n, 2**14, 2**14, precision='float64')
-        print(n, time1, time2, flops_ref/time1, flops_ref/time2 )
+    print("n Tflops(FP16) Tflops(SP) Tflops(DP) ")
+    for n in range(1,15):
+        flops_ref = (2**14)*(2**14)*(2**n)*2/(10**12)
+        time1 = benchmark2(2 ** n, 2 ** 14, 2 ** 14, precision='float32', use_tensor=True)
+        time2=benchmark2(2**n, 2**14, 2**14, precision='float32')
+        if n <= 6 or not skip_dp :
+            time3=benchmark2(2**n, 2**14, 2**14, precision='float64')
+            print(f"{n}, {flops_ref/time1:.4f}, {flops_ref/time2:.4f}, {flops_ref/time3:.4f}")
+        else:
+            print(f"{n}, {flops_ref / time1:.4f}, {flops_ref / time2:.4f}, skip")
     return
 
 test()

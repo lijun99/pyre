@@ -566,6 +566,108 @@ gemm(PyObject *, PyObject *args)
     Py_RETURN_NONE;
 }
 
+// cublas gemmex matrix-matrix multiplication
+// it may use tensor core (FP16) to accelerate gemm
+// C = α op ( A ) op ( B ) + β C
+
+// note cublas uses column major while python/c uses row-major,
+// therefore cuda.matrix should be treated as m=col/size2/shape[1] x n=row/size1/shape[0] for cublas
+const char * const pyre::extensions::cuda::cublas::gemmex__name__ = "cublas_gemmex";
+const char * const pyre::extensions::cuda::cublas::gemmex__doc__ = "cublas gemmex";
+PyObject *
+pyre::extensions::cuda::cublas::
+gemmex(PyObject *, PyObject *args)
+{
+    /*
+    cublasStatus_t cublasGemmEx(cublasHandle_t handle,
+                           cublasOperation_t transa,
+                           cublasOperation_t transb,
+                           int m,
+                           int n,
+                           int k,
+                           const void     *alpha,
+                           const void     *A,
+                           cudaDataType   Atype,
+                           int lda,
+                           const void     *B,
+                           cudaDataType   Btype,
+                           int ldb,
+                           const void     *beta,
+                           void           *C,
+                           cudaDataType   Ctype,
+                           int ldc,
+                           cudaDataType   computeType,
+                           cublasGemmAlgo_t algo)
+     */
+    // allocate storage for the arguments
+    PyObject * handleCapsule; // cublas handle capsule
+    int transa, transb;
+    int m, n, k;
+    double alpha, beta;
+    PyObject * ACapsule, * BCapsule, * CCapsule; // cuda matrix
+    int lda, ldb, ldc;
+    // if I were not passed the expected arguments
+    if (!PyArg_ParseTuple(args, "O!iiiiidO!iO!idO!i:cublas_gemmex",
+                                &PyCapsule_Type, &handleCapsule,
+                                &transa, &transb,
+                                &m, &n, &k,
+                                &alpha,
+                                &PyCapsule_Type, &ACapsule, &lda,
+                                &PyCapsule_Type, &BCapsule, &ldb,
+                                &beta,
+                                &PyCapsule_Type, &CCapsule, &ldc))
+    {
+        // raise an exception
+        PyErr_SetString(PyExc_TypeError, "invalid parameters for cublas_gemmex");
+        return nullptr;
+    }
+    // check cublas handle capsule
+    if (!PyCapsule_IsValid(handleCapsule, capsule_t)) {
+        PyErr_SetString(PyExc_TypeError, "invalid cublas handle");
+        return 0;
+    }
+    // get the handle
+    cublasHandle_t handle =
+        static_cast<cublasHandle_t>(PyCapsule_GetPointer(handleCapsule, capsule_t));
+
+    // check the data capsule type
+    if (!PyCapsule_IsValid(ACapsule, pyre::extensions::cuda::matrix::capsule_t) ||
+            !PyCapsule_IsValid(BCapsule, pyre::extensions::cuda::matrix::capsule_t) ||
+            !PyCapsule_IsValid(CCapsule, pyre::extensions::cuda::matrix::capsule_t) )
+    {
+        PyErr_SetString(PyExc_TypeError, "invalid vector/matrix type");
+        return 0;
+    }
+
+    // get the matrix
+    cuda_matrix * A = static_cast<cuda_matrix *>(PyCapsule_GetPointer(ACapsule, pyre::extensions::cuda::matrix::capsule_t));
+    cuda_matrix * B = static_cast<cuda_matrix *>(PyCapsule_GetPointer(BCapsule, pyre::extensions::cuda::matrix::capsule_t));
+    cuda_matrix * C = static_cast<cuda_matrix *>(PyCapsule_GetPointer(CCapsule, pyre::extensions::cuda::matrix::capsule_t));
+
+    switch(A->dtype) {
+    case PYCUDA_FLOAT: {
+        float falpha = (float)alpha;
+        float fbeta = (float)beta;
+        cublasSafeCall(cublasGemmEx(handle,
+            (cublasOperation_t)transa, (cublasOperation_t)transb,
+            m, n, k,
+            &falpha,
+            (const float *)A->data, CUDA_R_32F, lda,
+            (const float *)B->data, CUDA_R_32F, ldb,
+            &fbeta,
+            (float *)C->data, CUDA_R_32F, ldc,
+            CUBLAS_COMPUTE_32F_FAST_16F, // Compute type
+            CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+        break; }
+    default:
+        PyErr_SetString(PyExc_TypeError, "only float(FP32) are currently supported");
+        return 0;
+    }
+
+    // return None
+    Py_RETURN_NONE;
+}
+
 // cublas gemv symmetric matrix-vector multiplication
 // y = α op(A) x + β y
 
