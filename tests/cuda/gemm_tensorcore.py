@@ -18,8 +18,6 @@ def test():
     m = 2**12
     k = 2**14
     n = 2**10
-    iterations = 10
-    #### GSL ####
 
     # generate random matrices
     A = numpy.random.rand(m, k).astype(precision)
@@ -39,11 +37,14 @@ def test():
     dC_tc = cuda.cublas.gemmex(dA, dB)
 
     ### compare ####
-    print("gemm, max relative difference between cpu/gpu results: ",
-         cuda.stats.max_relative_error(dC, cuda.matrix(source=C, dtype=precision)))
+    print("gemm, max difference and relative difference between cpu/gpu results: ",
+        cuda.stats.max_diff(dC, cuda.matrix(source=C, dtype=precision)),
+        cuda.stats.max_relative_error(dC, cuda.matrix(source=C, dtype=precision))
+        )
 
-    print("gemm, max relative difference between gpu FP32/FP16 results: ",
-         cuda.stats.max_relative_error(dC, dC_tc))
+    print("gemm, max difference and relative difference between gpu FP32/FP16 results: ",
+        cuda.stats.max_diff(dC, dC_tc),
+        cuda.stats.max_relative_error(dC, dC_tc))
 
 
     return

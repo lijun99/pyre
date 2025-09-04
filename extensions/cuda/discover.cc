@@ -72,9 +72,6 @@ createDeviceSheet(PyObject *sheetFactory, const int index)
     // attach it
     PyObject_SetAttrString(sheet, "runtimeVersion", vtuple);
 
-    // attach the compute mode
-    PyObject_SetAttrString(sheet, "computeMode", PyLong_FromLong(prop.computeMode));
-
     // attach the managed memory flag
     PyObject_SetAttrString(sheet,
                            "managedMemory",

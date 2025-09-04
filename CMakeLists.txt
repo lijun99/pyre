@@ -77,7 +77,7 @@ if (WITH_CUDA)
     message(STATUS "CUDA Toolkit found and CUDA support is enabled")
     # other cuda settings
     if(NOT DEFINED CMAKE_CUDA_STANDARD)
-      set(CMAKE_CUDA_STANDARD 11)
+      set(CMAKE_CUDA_STANDARD 17)
       set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     endif()
   # cuda toolkit not available
