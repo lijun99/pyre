@@ -6,6 +6,7 @@
 
 
 # externals
+import journal
 import pyre.parsing
 import pyre.tracking
 import pyre.patterns
@@ -40,10 +41,21 @@ class Parser(pyre.parsing.parser):
         # tokenize the {stream}
         self.scanner.pyre_tokenize(uri=uri, stream=stream, client=processor)
 
+        # if the input has errors, the stack of open containers may be unbalanced
+        if self.errors:
+            # so harvest nothing; the caller reports the errors
+            return
+
         # get the top level event container
         configuration = self.context.pop()
-        # if all went well, that's all there was
-        assert len(self.context) == 0
+        # if there is anything else left open
+        if self.context:
+            # a well formed input left the stack unbalanced, which is a bug in this parser
+            channel = journal.firewall("pyre.config.pfg")
+            # complain
+            channel.log(f"{uri}: unbalanced sections after a parse without errors")
+            # and bail, in case firewalls aren't fatal
+            return
 
         # return the harvested events
         yield from configuration.events()
