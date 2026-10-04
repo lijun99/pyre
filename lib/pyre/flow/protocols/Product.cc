@@ -1,8 +1,9 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // (c) 1998-2026 all rights reserved
+
 
 // support
 #include "../public.h"
@@ -14,11 +15,13 @@ pyre::flow::protocols::Product::~Product()
     auto channel = pyre::journal::debug_t("pyre.flow.products.destroy");
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // the product
         << "product " << this << ": destroy"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
     // all done
     return;
 }
@@ -74,11 +77,13 @@ pyre::flow::protocols::Product::flush() -> void
     auto channel = pyre::journal::debug_t("pyre.flow.products.flush");
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // the product
         << "product '" << name() << "' at " << this << ": flush"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
     // chain up
     Node::flush();
     // mark me
@@ -99,11 +104,13 @@ pyre::flow::protocols::Product::make() -> product_ref_type
     auto channel = pyre::journal::debug_t("pyre.flow.products.make");
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // sign on
         << "product '" << name() << "' at " << this << ": make"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
 
     // make a reference
     auto self = ref();
@@ -120,5 +127,6 @@ pyre::flow::protocols::Product::make() -> product_ref_type
     // all done
     return self;
 }
+
 
 // end of file

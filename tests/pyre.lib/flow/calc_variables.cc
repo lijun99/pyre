@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -56,11 +56,13 @@ main(int argc, char * argv[])
     int value = result->value();
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // the value
         << "add: value=" << value
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
     // check it
     assert((value == 6));
 
@@ -70,16 +72,19 @@ main(int argc, char * argv[])
     value = result->value();
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // the value
         << "add: value=" << value
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
     // check it gain
     assert((value == 9));
 
     // all done
     return 0;
 }
+
 
 // end of file

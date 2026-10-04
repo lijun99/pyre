@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -181,6 +181,36 @@ pyre::journal::py::info(py::module & m)
             // the docstring
             "the default device for all info channels")
 
+        // the default device, for those that prefer methods to class properties
+        .def_static(
+            // the name
+            "getDefaultDevice",
+            // the implementation
+            []() -> info_t::device_type {
+                // my index knows
+                return info_t::index().device();
+            },
+            // the docstring
+            "get the default device of all info channels")
+
+        // install a new default device
+        .def_static(
+            // the name
+            "setDefaultDevice",
+            // the implementation
+            [](info_t::device_type device) -> info_t::device_type {
+                // get the current setting
+                auto old = info_t::index().device();
+                // install the new device
+                info_t::index().device(device);
+                // and hand back the previous one
+                return old;
+            },
+            // the signature
+            "device"_a,
+            // the docstring
+            "make {device} the default device of all info channels, and return the previous one")
+
         // interface
         // activate
         .def(
@@ -307,7 +337,7 @@ pyre::journal::py::info(py::module & m)
                 info_t::logfile(path, flag);
             },
             // the signature
-            "name"_a, "mode"_a = "w",
+            "path"_a, "mode"_a = "w",
             // the docstring
             "send all output to a file")
 

@@ -1,9 +1,8 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // (c) 1998-2026 all rights reserved
-
 
 // code guard
 #pragma once
@@ -115,14 +114,16 @@ pyre::h5::read(
         auto channel = pyre::journal::error_t("pyre.h5");
         // complain
         channel
+            // where
+            << pyre::journal::at()
             // what
             << "the destination is too small for the tile"
             << pyre::journal::newline
             // details
             << "it holds " << data.cells() << " cells, and the tile has "
             << cells
-            // where
-            << pyre::journal::endl(__HERE__);
+            // flush
+            << pyre::journal::endl;
         // and bail, rather than let the library write past the end of the buffer
         return;
     }
@@ -170,14 +171,16 @@ pyre::h5::read(
         auto channel = pyre::journal::error_t("pyre.h5");
         // complain
         channel
+            // where
+            << pyre::journal::at()
             // what
             << "the destination is too small for the tile"
             << pyre::journal::newline
             // details
             << "it holds " << data.cells() << " cells, and the tile has "
             << cells
-            // where
-            << pyre::journal::endl(__HERE__);
+            // flush
+            << pyre::journal::endl;
         // and bail, rather than let the library write past the end of the buffer
         return;
     }

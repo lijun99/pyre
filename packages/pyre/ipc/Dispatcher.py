@@ -1,4 +1,4 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -67,6 +67,14 @@ class Dispatcher(pyre.protocol, family="pyre.ipc.dispatchers"):
         """
         Add {call} to the list of routines to call when something exceptional has happened
         to {channel}
+        """
+
+    @pyre.provides
+    def forget(self, channel):
+        """
+        Stop watching {channel}: drop every handler registered on it, including the ones that
+        are running right now, so a channel that is about to be closed leaves nothing behind
+        under descriptor numbers that will be recycled
         """
 
     # introspection

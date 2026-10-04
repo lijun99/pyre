@@ -1,4 +1,4 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -33,6 +33,7 @@ class Warning(Channel, active=True, fatal=False):
 
     # constants
     severity = "warning"  # the channel severity
+    headline = "warning"  # the summary of the condition when i'm fatal
     fatalError = ApplicationError  # the exception i raise when i'm fatal
 
 

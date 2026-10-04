@@ -1,7 +1,9 @@
+# -*- yaml -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
+
 
 name: pypi-wheels
 
@@ -21,6 +23,7 @@ jobs:
       matrix:
         platforms:
           - [ubuntu-latest, manylinux_x86_64]
+          - [ubuntu-24.04-arm, manylinux_aarch64]
           - [macos-15-intel, macosx_x86_64]
           - [macos-15, macosx_arm64]
         python: [cp311, cp312, cp313, cp314]

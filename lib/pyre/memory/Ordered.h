@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -110,6 +110,25 @@ template <typename T, std::endian order>
 struct pyre::memory::Native<pyre::memory::Ordered<T, order>> {
     // unwrap
     using type = T;
+};
+
+
+// a cell value type that reads correctly at any address
+// the general case: a scalar that needs more than byte alignment is wrapped in the host's order,
+// which leaves its bytes alone and reads them by copying, wherever they sit
+template <typename T>
+struct pyre::memory::Unaligned {
+    // wrap, unless a byte aligns the scalar already
+    using type = std::conditional_t<alignof(T) == 1, T, Ordered<T, std::endian::native>>;
+    // which only works if the wrapper really can sit anywhere
+    static_assert(alignof(type) == 1, "unaligned cells must be byte aligned");
+};
+
+// and the ordered wrapper already keeps its value as an array of bytes
+template <typename T, std::endian order>
+struct pyre::memory::Unaligned<pyre::memory::Ordered<T, order>> {
+    // so it is its own answer
+    using type = Ordered<T, order>;
 };
 
 

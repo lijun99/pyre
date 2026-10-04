@@ -1,8 +1,9 @@
+# -*- text -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
-#
+
 
 - gate for 1.13.0 (collected 2026-07-31, so nothing important slips):
 
@@ -74,6 +75,29 @@
     exercised on three database families, the crib sheet should retire, and with it a
     whole class of silent staleness
 
+- tests:
+
+  - move the C++ test drivers to Catch2: 242 drivers in {journal.lib}, {pyre.lib}, {h5.lib},
+    {mpi.lib}, {chroma.lib}, and {cuda.lib} check their results with 1092 {assert}s, which a
+    build that defines {NDEBUG} compiles away; mm keeps them live in every mode since mm#66,
+    by compiling test drivers with {DEBUG}, and the cmake build does the same for its test
+    targets in every configuration, but that is a workaround: Catch2's {REQUIRE} and
+    {CHECK} do not depend on the build mode, report what failed, and stay silent on success.
+    mm already supports it: {<suite>.runner := catch2} compiles a suite into one binary, with
+    {extern := catch2}; see {examples/step09} in the mm repository. Catch2 v3, which the
+    runner needs, ships with ubuntu 25.10 and later, debian trixie, conda, and macports, so
+    the CI images need checking before a suite switches. Migrate suite by suite, keeping a
+    driver's single behavior as a single Catch2 test case
+
+  - mpi launches hang on macOS while a VPN is up (found 2026-10-02): {mpiexec -np 1
+    tests/mpi.lib/sanity} never returns, while the same driver run as a singleton and {mpiexec
+    -np 2 /usr/bin/true} both finish at once; with the VPN down the whole suite passes, {mpi.lib},
+    {mpi.ext}, {mpi.pkg}, and the {gsl.pkg} partition, collect, and broadcast tests included. open
+    mpi 5.0.10 wires its ranks over every interface it finds; restricting the test launches to the
+    loopback ({--mca btl_tcp_if_include lo0 --mca oob_tcp_if_include lo0}, or their linux
+    spelling) would make them independent of the network; it belongs with the launcher
+    vocabulary that is moving to mm ({mpi.launch})
+
 - docker:
 
   - stand up a postgres server in the rolling cell, maybe others, maybe all of them, so the
@@ -101,6 +125,12 @@
   - the docker cells mount the standalone {mm} checkout next to the pyre clone; the merlin
     {mm} layer bundled under {share/mm} should be capable of building pyre on its own, so
     the cells (and their mount contract) should not need {~/dv/mm}
+
+  - {bin/mm} downloads the boot bundle into a new {tempfile.mkdtemp()} directory every time
+    {pyre} is not importable, so its check for an existing copy never succeeds: every run
+    downloads the bundle again and leaves a directory behind. The standalone {mm} keeps its
+    copy in a {.mm} directory next to the script; {bin/mm} should keep one too, in a stable,
+    per-release location such as the user's cache directory, so a second run reuses it
 
 - framework:
 
@@ -139,6 +169,51 @@
 
     - is the last valid assignment the one that wins? is it fatal if the last assignment
       violates a constraint or do I fall back? how does the user control this behavior?
+
+- yaml: a round trip parser of our own, in c++ with bindings (2026-10-04)
+
+  - why: {config/yaml/Parser.py} reads through PyYAML and {config/yaml/Editor.py} edits
+    through ruamel; ruamel files every comment after the last entry of a collection with the
+    deepest entry before it, so most of the editor is code that puts comments back at the
+    level they belong to (pyre#326 is the latest round); c++ clients of pyre cannot read
+    configuration files at all; one parser of our own retires both externals and serves both
+
+  - the tree: lossless, a tree of lines in which every line, comments and blank lines
+    included, hangs at the level its indentation says it belongs to; editing inserts into
+    the right list of children, rendering concatenates; no comment placement heuristics
+
+  - the subset: what configuration files use: block mappings and sequences, plain and
+    quoted scalars, the empty flow collections {[]} and {}, the block scalars {|} and {>},
+    comments, blank lines; no anchors, tags, or multiple documents; scalars are delivered
+    as text, the way {pfg} and {cfg} deliver them (verify the traits cope everywhere first)
+
+  - tools: an {re2c} lexer and a hand written recursive descent parser
+
+    - {re2c} generates plain c++ with no runtime library, so nothing new is linked into
+      the core; it handles the tedious parts: character classes, quoting and escapes,
+      utf-8; the lexer synthesizes INDENT/DEDENT tokens from an indentation stack, the way
+      the python tokenizer does
+
+    - past the lexer the grammar is small, and recursive descent keeps every token,
+      including comments and blank lines, in the tree, with error messages that name the
+      line, the column, and what was expected; an LALR generator (bison, lemon) fights the
+      lossless tree and makes errors hard to word; a PEG library (PEGTL) is header only
+      but its grammars are dense templates, and it does nothing for indentation
+
+    - build: {re2c} becomes a build time tool, so mm needs a rule for generated sources,
+      or the generated lexer is checked in and regenerated by hand; decide before starting
+
+  - layout: {lib/pyre/yaml} with the line tree, lexer, parser, and renderer;
+    {ext/pyre/yaml} binds the tree and its editing operations; {config/yaml} rebuilt on top,
+    keeping the editor's public api so the 13 {yaml_editor_*} drivers carry over
+
+  - tests: c++ drivers for the lexer and parser; a byte identical round trip of every yaml
+    file in pyre, qed, qef, and ~/dv/data; the editor drivers unchanged
+
+  - estimate: ~158 h: subset spec 8, lexer and tree 40, bindings 24, mm build 6, editor 32,
+    loader and locators 8, tests 24, edge cases (tabs, CRLF, BOM, unicode, block scalars)
+    16; a python only version would be ~110 h and fast enough for configuration files, but
+    would leave the c++ clients out
 
 - traits:
 
@@ -185,6 +260,15 @@
 - weaver:
 
   - i want my own rst, and my own sphinx...
+
+  - the preambles the weaver writes predate the standard layout: mixed case modes ({Python},
+    {C++}, {Makefile}, {LaTeX}, {F90}, {SQL}, {C}), an affiliation line under the author, one
+    blank line between the preamble and the body and between the body and the marker, and a
+    trailing commented spacer; bring {Mill._header}, {Mill.render}, and the {languageMarker}
+    defaults to the standard: a lower case mode, the coding line, a spacer, the author, the
+    copyright, two blank lines on either side of the body; then audit the layout of every
+    template under {templates/}, which the preamble check exempts because of their
+    substitution markers, against the same standard
 
 - help: make
 

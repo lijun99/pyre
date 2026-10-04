@@ -1,4 +1,5 @@
 # -*- cmake -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
@@ -12,6 +13,7 @@ pyre_test_python_testcase(tests/journal.ext/api_file.py)
 pyre_test_python_testcase(tests/journal.ext/api_file_mode.py)
 pyre_test_python_testcase(tests/journal.ext/api_quiet.py)
 pyre_test_python_testcase(tests/journal.ext/cerr.py)
+pyre_test_python_testcase(tests/journal.ext/channel_default_methods.py)
 pyre_test_python_testcase(tests/journal.ext/chronicler.py)
 pyre_test_python_testcase(tests/journal.ext/chronicler_device.py)
 pyre_test_python_testcase(tests/journal.ext/courier_cxx.py)
@@ -44,11 +46,14 @@ pyre_test_python_testcase(tests/journal.ext/error_defaults.py)
 pyre_test_python_testcase(tests/journal.ext/error_empty.py)
 pyre_test_python_testcase(tests/journal.ext/error_example.py)
 pyre_test_python_testcase(tests/journal.ext/error_example_nonfatal.py)
+pyre_test_python_testcase(tests/journal.ext/error_throw_inactive.py)
+pyre_test_python_testcase(tests/journal.ext/error_throw_nonfatal.py)
 pyre_test_python_testcase(tests/journal.ext/error_file.py)
 pyre_test_python_testcase(tests/journal.ext/error_file_mode.py)
 pyre_test_python_testcase(tests/journal.ext/error_flush.py)
 pyre_test_python_testcase(tests/journal.ext/error_inject.py)
 pyre_test_python_testcase(tests/journal.ext/error_instance.py)
+pyre_test_python_testcase(tests/journal.ext/error_log_entry.py)
 pyre_test_python_testcase(tests/journal.ext/error_loop.py)
 pyre_test_python_testcase(tests/journal.ext/error_notes.py)
 pyre_test_python_testcase(tests/journal.ext/error_properties.py)
@@ -59,8 +64,11 @@ pyre_test_python_testcase(tests/journal.ext/error_shared.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_cascade.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_defaults.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_empty.py)
+pyre_test_python_testcase(tests/journal.ext/firewall_error_entry.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_example.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_example_nonfatal.py)
+pyre_test_python_testcase(tests/journal.ext/firewall_throw_inactive.py)
+pyre_test_python_testcase(tests/journal.ext/firewall_throw_nonfatal.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_file.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_file_mode.py)
 pyre_test_python_testcase(tests/journal.ext/firewall_flush.py)
@@ -145,5 +153,6 @@ pyre_test_python_cleanup(firewall_file_mode.log tests/journal.ext/firewall_file_
 pyre_test_python_cleanup(help_file_mode.log tests/journal.ext/help_file_mode.py)
 pyre_test_python_cleanup(info_file_mode.log tests/journal.ext/info_file_mode.py)
 pyre_test_python_cleanup(warning_file_mode.log tests/journal.ext/warning_file_mode.py)
+
 
 # end of file

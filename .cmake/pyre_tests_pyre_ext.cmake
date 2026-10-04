@@ -1,4 +1,5 @@
 # -*- cmake -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
@@ -19,6 +20,8 @@ pyre_test_python_testcase(tests/pyre.ext/grid/sanity.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/heap.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/access.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/map.py)
+pyre_test_python_testcase(tests/pyre.ext/grid/offset.py)
+pyre_test_python_testcase(tests/pyre.ext/grid/ordered.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/mosaic.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/readonly.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/view.py)
@@ -26,6 +29,8 @@ pyre_test_python_testcase(tests/pyre.ext/grid/lifetime.py)
 
 # the drivers leave their scratch products behind so they can be inspected; sweep them
 pyre_test_python_cleanup(grid_map_test.dat tests/pyre.ext/grid/map.py)
+pyre_test_python_cleanup(grid_offset_test.dat tests/pyre.ext/grid/offset.py)
+pyre_test_python_cleanup(grid_ordered_test.dat tests/pyre.ext/grid/ordered.py)
 pyre_test_python_cleanup(grid_readonly_test.dat tests/pyre.ext/grid/readonly.py)
 
 # N.B. the chroma bindings under tests/pyre.ext/chroma are registered in

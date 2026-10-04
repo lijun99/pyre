@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -108,10 +108,12 @@ namespace pyre::postgres::codecs {
         if (length < 0) {
             auto channel = pyre::journal::firewall_t("pyre.postgres.codecs");
             channel
+                // where
+                << pyre::journal::at()
                 // what
                 << "failed to render a floating point value"
-                // where, and flush
-                << pyre::journal::endl(__HERE__);
+                // flush
+                << pyre::journal::endl;
             // in a build with firewalls disabled, hand back something the server will reject
             return string_t();
         }

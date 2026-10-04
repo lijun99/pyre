@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -24,11 +24,13 @@ pyre::viz::factories::filters::Cycle<signalT, cycleT>::create(
     auto channel = pyre::journal::debug_t("pyre.viz.factories.filters.cycle");
     // let me know
     channel
+        // where
+        << pyre::journal::at()
         // mark
         << "cycle '" << ref->name() << "' at " << ref.get() << ": create"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
 
     // all done
     return ref;
@@ -42,11 +44,13 @@ pyre::viz::factories::filters::Cycle<signalT, cycleT>::~Cycle()
     auto channel = pyre::journal::debug_t("pyre.viz.factories.filters.cycle");
     // let me know
     channel
+        // where
+        << pyre::journal::at()
         // mark
         << "cycle '" << name() << "' at " << this << ": destroy"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
 
     // all done
     return;
@@ -151,6 +155,8 @@ pyre::viz::factories::filters::Cycle<signalT, cycleT>::make(
         auto channel = pyre::journal::error_t("pyre.viz.factories.filters.cycle");
         // complain
         channel
+            // where
+            << pyre::journal::at()
             // who
             << "cycle " << this->name() << "' at " << this << ":"
             << pyre::journal::newline
@@ -178,7 +184,7 @@ pyre::viz::factories::filters::Cycle<signalT, cycleT>::make(
             // outdent
             << pyre::journal::outdent
             // flush
-            << pyre::journal::endl(__HERE__);
+            << pyre::journal::endl;
         // and bail, just in case errors aren't fatal
         return self;
     }
@@ -188,7 +194,7 @@ pyre::viz::factories::filters::Cycle<signalT, cycleT>::make(
     // compute its length
     auto delta = high - low;
     // go over the cells
-    for (auto cell = 0ul; cell < cells; ++cell) {
+    for (decltype(cells) cell = 0; cell < cells; ++cell) {
         // read the value from the signal
         auto value = signal[cell];
         // compute the phase and map it to [-0.5, 0.5]

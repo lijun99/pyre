@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -33,7 +33,7 @@ main()
     // send its output to the splitter
     channel.device(splitter);
     // inject something
-    channel << "hello world!" << pyre::journal::endl(__HERE__);
+    channel << pyre::journal::at() << "hello world!" << pyre::journal::endl;
     // both buffers got the message
     assert(first.str().find("hello world!") != std::string::npos);
     assert(second.str().find("hello world!") != std::string::npos);

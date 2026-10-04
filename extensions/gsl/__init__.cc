@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -24,11 +24,13 @@ namespace {
         auto channel = pyre::journal::warning_t("gsl");
         // and complain
         channel
+            // where
+            << pyre::journal::at()
             // the reason
             << "gsl error: "
             << reason
             // flush
-            << pyre::journal::endl(__HERE__);
+            << pyre::journal::endl;
         // all done
         return;
     }

@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -44,7 +44,7 @@ main()
     // activate it
     // channel.activate();
     // and show me
-    channel << "elapsed time: " << timer.ms() << pyre::journal::endl(__HERE__);
+    channel << pyre::journal::at() << "elapsed time: " << timer.ms() << pyre::journal::endl;
 
     // all done
     return 0;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -14,7 +14,7 @@ def test():
     from journal.ext.journal import Help as help
 
     # send all output to a file
-    help.logfile(name="help_file_mode.log", mode="a")
+    help.logfile(path="help_file_mode.log", mode="a")
 
     # make a help channel
     channel = help(name="tests.journal.help")

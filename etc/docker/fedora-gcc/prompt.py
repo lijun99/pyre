@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -576,7 +577,7 @@ def csi3(code):
     """
     Make a control sequence for the given color code
     """
-    # easy wnough
+    # easy enough
     return f"{rl_hide}{ascii_esc}[{code}m{rl_unhide}"
 
 

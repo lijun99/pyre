@@ -1,4 +1,4 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -22,6 +22,8 @@ tile = tiles.tile
 # factories
 codec = codecs.codec
 colormap = colormaps.colormap
+filter = filters.filter
+selector = selectors.selector
 
 
 # end of file

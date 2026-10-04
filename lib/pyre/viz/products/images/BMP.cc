@@ -1,8 +1,9 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // (c) 1998-2026 all rights reserved
+
 
 // externals
 #include "../external.h"
@@ -24,11 +25,13 @@ pyre::viz::products::images::BMP::~BMP()
     auto channel = pyre::journal::debug_t("pyre.viz.products.images.bmp");
     // let me know
     channel
+        // where
+        << pyre::journal::at()
         // mark
         << "bmp at " << this << ": destroy"
         << pyre::journal::newline
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
 
     // all done
     return;
@@ -48,6 +51,8 @@ pyre::viz::products::images::BMP::dump() -> ref_type
     auto channel = pyre::journal::debug_t("pyre.viz.products.images.bmp");
     // show me
     channel
+        // where
+        << pyre::journal::at()
         // the product
         << "bmp " << this
         << pyre::journal::newline
@@ -65,10 +70,11 @@ pyre::viz::products::images::BMP::dump() -> ref_type
         // outdent
         << pyre::journal::outdent
         // flush
-        << pyre::journal::endl(__HERE__);
+        << pyre::journal::endl;
 
     // all done
     return self;
 }
+
 
 // end of file

@@ -1,8 +1,9 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // (c) 1998-2026 all rights reserved
+
 
 // config
 #include <portinfo>
@@ -26,7 +27,7 @@ main()
     // make a channel
     pyre::journal::debug_t channel("pyre.geometry");
     // show me
-    channel << pyre::journal::at(__HERE__);
+    channel << pyre::journal::at();
     // the entire cloud
     for (auto p : cloud) {
         channel << "point: (" << p << ")" << pyre::journal::newline;

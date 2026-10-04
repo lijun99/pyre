@@ -1,15 +1,24 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
 
 
+# externals
+import os
+
 # publish the package metadata
 from . import meta
 
-# load the exception hierarchy
+# load the exception hierarchy, which both implementations share
 from . import exceptions
+
+# publish the exceptions
+JournalError = exceptions.JournalError
+FirewallError = exceptions.FirewallError
+DebugError = exceptions.DebugError
+ApplicationError = exceptions.ApplicationError
 
 # set up a marker about whether we are going to load and publish the bindings
 without_libjournal = False
@@ -22,8 +31,8 @@ try:
     without_libjournal = __main__.journal_no_libjournal
 # if not
 except AttributeError:
-    # no worries
-    pass
+    # turn the bindings off when the environment asks for it
+    without_libjournal = os.environ.get("JOURNAL_LIBJOURNAL") == "off"
 
 # if we are allowed
 if not without_libjournal:
@@ -37,17 +46,11 @@ if not without_libjournal:
 
 # if we don't have access to the bindings, rely on the pure python implementation
 if without_libjournal:
-    # publish the keeper of the global settings
-    from .Chronicler import Chronicler
+    # get the keeper of the global settings, without publishing its class
+    from . import Chronicler
 
     # instantiate the singleton and publish the instance
-    chronicler = Chronicler()
-
-    # exceptions
-    JournalError = exceptions.JournalError
-    FirewallError = exceptions.FirewallError
-    DebugError = exceptions.DebugError
-    ApplicationError = exceptions.ApplicationError
+    chronicler = Chronicler.Chronicler()
 
     # devices
     from .Trash import Trash as trash
@@ -70,12 +73,12 @@ if without_libjournal:
 
     # lower level entities that users may want to subclass
     from .Device import Device as device
-    from .Renderer import Renderer as renderer
-    from .Alert import Alert as alert
-    from .Memo import Memo as memo
 
     # the content of an entry, for those that rebuild entries from records
     from .Entry import Entry as entry
+
+    # the device that ships entries to another process
+    from .Courier import Courier as courier
 
     # convenience function to set the application name
     def application(name):
@@ -92,10 +95,8 @@ if without_libjournal:
         """
         Suppress all output
         """
-        # make a trash can
-        trashcan = trash()
-        # set it as the default device
-        chronicler.device = trashcan
+        # ask the chronicler
+        chronicler.quiet()
         # all done
         return
 
@@ -111,32 +112,44 @@ if without_libjournal:
         # all done
         return
 
-    # convenience function to set the message decoration level
-    def decor(level):
+    # convenience function to set or report the message decoration level
+    def decor(level=None):
         """
-        Set the message decoration level
+        Set the message decoration level to {level}; without one, report the current setting
         """
-        # set {level} as the default
+        # if there is no new setting
+        if level is None:
+            # report the current one
+            return chronicler.decor
+        # otherwise, make {level} the default
         chronicler.decor = level
         # all done
         return
 
-    # convenience function to set the maximum message detail level
-    def detail(level):
+    # convenience function to set or report the maximum message detail level
+    def detail(level=None):
         """
-        Set the maximum message detail level
+        Set the maximum message detail level to {level}; without one, report the current setting
         """
-        # set {level} as the default
+        # if there is no new setting
+        if level is None:
+            # report the current one
+            return chronicler.detail
+        # otherwise, make {level} the default
         chronicler.detail = level
         # all done
         return
 
-    # convenience function to set the margin decorator
-    def margin(margin):
+    # convenience function to set or report the margin decorator
+    def margin(margin=None):
         """
-        Set the margin decoration
+        Set the margin decoration to {margin}; without one, report the current setting
         """
-        # set {level} as the default
+        # if there is no new setting
+        if margin is None:
+            # report the current one
+            return chronicler.margin
+        # otherwise, make {margin} the default
         chronicler.margin = margin
         # all done
         return
@@ -147,12 +160,6 @@ else:
     # let the c++ library take over
     # publish the keeper of the global state
     chronicler = libjournal.Chronicler
-
-    # exceptions
-    JournalError = exceptions.JournalError
-    FirewallError = libjournal.FirewallError
-    DebugError = libjournal.DebugError
-    ApplicationError = libjournal.ApplicationError
 
     # devices
     trash = libjournal.Trash
@@ -175,6 +182,8 @@ else:
     device = libjournal.Device
     # the content of an entry, for those that rebuild entries from records
     entry = libjournal.Entry
+    # the device that ships entries to another process
+    courier = libjournal.Courier
     # renderer = libjournal.Renderer
     # alert = libjournal.Alert
     # memo = libjournal.Memo
@@ -194,10 +203,6 @@ from .Record import Record as record
 
 # an instruction to a channel in another process
 from .Control import Control as control
-
-# the device that ships entries to another process; it derives from {device}, so it must
-# come after the implementation choice
-from .Courier import Courier as courier
 
 # the channel factories, by severity, for those that rebuild entries from records
 severities = {

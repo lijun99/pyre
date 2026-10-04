@@ -1,15 +1,19 @@
-<!-- -*- Markdown -*-
-   -
-   - michael a.g. aïvázis <michael.aivazis@para-sim.com>
-   - (c) 1998-2026 all rights reserved
-   -->
+<!--
+-*- markdown -*-
+-*- coding: utf-8 -*-
+
+michael a.g. aïvázis <michael.aivazis@para-sim.com>
+(c) 1998-2026 all rights reserved
+-->
 
 # Cutting a release
 
 A release is a git tag on `main`, a GitHub release built on that tag, and the distributions
 that follow from it. The version is derived from the tag everywhere: `setuptools_scm` reads it
 for the pip distributions, `.cmake/pyre_init.cmake` and `mm` read it through `git describe`, and
-the packages get it stamped into their `meta.py`. Nothing in the source tree records the
+the packages get it stamped into their `meta.py`. A tarball made by `git archive`, e.g. the one
+GitHub offers for every tag, has no `.git`; git fills in `.git_archival.txt` as it makes the
+tarball, and `setuptools_scm` reads the version from there. Nothing in the source tree records the
 version, so a release does not begin with a version bump. What follows is the sequence, in the
 order it must happen, with the reason for each step and how to check it.
 
@@ -29,18 +33,41 @@ order it must happen, with the reason for each step and how to check it.
    print nothing. A check that prints nothing after a failed fetch has not run; deleting the
    head branch of an unmerged pull request closes it.
 
-3. **The bootstrap pins name the release about to be cut.** Two scripts download the boot
-   bundle from the GitHub release when `pyre` is not importable, and each pins the release it
-   fetches:
+3. **The bootstrap pins in this repository name the release about to be cut.** Three scripts
+   here download the boot bundle from the GitHub release when `pyre` is not importable, and
+   each pins the release it fetches:
 
-   - `bin/mm` in this repository: `_pyre_release`
-   - `mm` in the `mm` repository (`github.com/aivazis/mm`): `_pyre_release`
+   - `bin/mm`: `_pyre_release`
+   - `bin/merlin`: `release`
+   - `configure`: `release`
 
-   Both must name the tag about to be created. The pin cannot be verified until the release
-   exists, so this is the one place a version is written ahead of the tag. The README's
-   release tarball link (`archive/refs/tags/vX.Y.Z.tar.gz`) is the third. A patch release
-   walks this item too: the pins name the previous release, which was set moments ago and
-   looks current.
+   All of them must name the tag about to be created. The pins cannot be verified until the
+   release exists, so this is the one place a version is written ahead of the tag.
+
+   The fourth pin, `_pyre_release` in `mm` in the `mm` repository (`github.com/aivazis/mm`),
+   is different: every CI workflow here clones that repository's `main` and bootstraps from
+   its pin on runners where `pyre` is not importable, so a pin that names a release that does
+   not exist yet fails every run with a 404. It moves after the release, in step 14. The README's
+   release tarball link (`archive/refs/tags/vX.Y.Z.tar.gz`) is the last. A patch release walks
+   this item too: the pins name the previous release, which was set moments ago and looks
+   current.
+
+   The list is only as good as its last update, so sweep the tree for the previous tag, and for
+   the one before it, before trusting it; a pin the list does not name shows up there:
+
+   ```
+   git grep -nE "vPREV|vPREVPREV"
+   ```
+
+   The make engine under `share/mm`, which the boot bundle's installer and every build from a
+   release tarball use, matches the engine of the latest `mm` release, `make` in the `mm`
+   repository, except for the banner in `mm/rules.mm`, which names merlin. pyre's own build
+   files use what the engine offers, e.g. suite cases, so an engine that lags builds a release
+   that silently skips part of its tests:
+
+   ```
+   diff -r share/mm/make <mm>/make
+   ```
 
 4. **The declared python floor matches what is tested.** `requires-python` and the
    classifiers in `pyproject.toml`, `find_package(Python ...)` in `CMakeLists.txt`, and the
@@ -72,6 +99,35 @@ order it must happen, with the reason for each step and how to check it.
      shared libraries against the wheel's layout, and a wheel whose layout misleads them
      imports the pure python package and fails at the first extension, which is what every
      v1.13.0 wheel did; nothing short of installing the repaired wheel catches it
+   - **a tarball made by `git archive` knows its version.** The tarball GitHub offers for the
+     tag, which conda-forge builds from, has no `.git`, and `setuptools_scm` takes the version
+     from the entries git filled into `.git_archival.txt`. Make one, extract it, and ask
+     `setuptools_scm` from inside it, in an environment that has it:
+
+     ```
+     git archive --format=tar.gz --prefix=pyre/ -o /tmp/pyre.tar.gz HEAD
+     tar xzf /tmp/pyre.tar.gz -C /tmp && cd /tmp/pyre
+     python -c "from setuptools_scm import get_version; print(get_version(root='.'))"
+     ```
+
+     Before the tag it answers the next patch version with a `devN` suffix; a `LookupError`, or
+     a warning that git archive did not support describe output, means the entries were not
+     found
+   - **every wheel of the matrix builds.** `pypi-wheels` builds the wheels on the runners the
+     release uses, and uploads only when a release is published, so a run started by hand
+     rehearses the whole matrix without touching PyPI:
+
+     ```
+     gh workflow run pypi-wheels.yaml --ref main
+     ```
+
+     Its wheels are kept as artifacts of the run. Download one for macOS and one for linux, e.g.
+     with `gh run download <run> -n pyre-wheels-cp313-manylinux_x86_64`, and check each on a
+     machine of its kind with `etc/release/wheel-check.sh {wheel} {python} {c++ compiler}`: in a
+     fresh environment it imports every compiled extension the wheel ships, reports the bindings
+     the packages publish and which implementation of the journal answers, makes a project with
+     `smith.pyre` from the templates, and builds and runs a toy against the headers and libraries
+     the wheel installs
    - the `pypi-testpypi` workflow (`workflow_dispatch`, `ref: main`) uploads an sdist to
      TestPyPI; this is the only exercise of the trusted publishing path before the real one
 
@@ -158,14 +214,22 @@ order it must happen, with the reason for each step and how to check it.
 11. **Verify the bootstrap, both ways.** On a host without `pyre`, or in a fresh environment,
     `mm` from the `mm` repository downloads the bundle and runs; that exercises only the
     `sys.path` bootstrap. The installer is a separate path: in a fresh conda environment with
-    the compilers installed and no `pyre` importable, run the downloaded asset to completion
+    what the core needs, and no `pyre` importable
+
+    ```
+    conda create -n pyre-installer -c conda-forge python cxx-compiler make git pybind11 pyyaml
+    ```
+
+    run the downloaded asset to completion
 
     ```
     timeout 1800 python pyre-boot.zip --interactive=no --channel=release --tag=vX.Y.Z \
         --target=<dir> --mode=conda
     ```
 
-    and confirm that the bootstrapper's banner appears exactly once, that the build gets past
+    and confirm that the bootstrapper's banner appears exactly once, that its audit marks the
+    core framework buildable (without pybind11 or the python headers it stops there, before
+    staging the source), that the build gets past
     the package database, and that the installed package imports with its extensions loaded
     and `pyre.meta.version` naming the release. Run it under `timeout`, since the failure mode
     of a broken relaunch is unbounded recursion, and stop it by pid, never by a pattern, on a
@@ -191,7 +255,9 @@ order it must happen, with the reason for each step and how to check it.
 
     Then confirm that `https://pypi.org/project/pyre/` shows the version and the expected
     files, and that `pip install pyre==X.Y.Z` in a fresh environment installs a wheel that
-    imports with its extensions loaded, on at least one platform. A wheel cell that fails
+    imports with its extensions loaded, on at least one platform: `pip download pyre==X.Y.Z
+    --no-deps` fetches the wheel for the host, and `etc/release/wheel-check.sh` runs the same
+    checks on it as on the rehearsal. A wheel cell that fails
     leaves the others in place; fix the cell and rerun the workflow by hand
     (`workflow_dispatch`); the uploads skip files already present. A wheel that uploaded but
     does not work cannot be replaced under its name: delete the file on pypi.org (each file
@@ -217,11 +283,14 @@ order it must happen, with the reason for each step and how to check it.
 
 ## After the release
 
-14. **Update the pins that could not be verified before.** If the bootstrap in either
-    repository needed changes discovered in step 11, they land on `main` after the release
-    and ride the next one.
+14. **Update the pins that could not be verified before.** The pin in the `mm` repository
+    names the new release now that its boot bundle is published; check that
+    `releases/download/vX.Y.Z/pyre-boot.zip` downloads before merging it. If the bootstrap in
+    either repository needed changes discovered in step 11, they land on `main` after the
+    release and ride the next one.
 
 15. **Record what the walk taught.** Anything that surprised, failed, or had to be done by
     hand goes into this file.
+
 
 <!-- end of file -->

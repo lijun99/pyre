@@ -1,4 +1,5 @@
-# -*- Makefile -*-
+# -*- makefile -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
@@ -8,6 +9,7 @@
 pyre.docker-images := \
     pyre.lts-clang \
     pyre.lts-gcc \
+    pyre.lts-gcc-cmake \
     pyre.rolling-clang \
     pyre.rolling-gcc \
     pyre.conda-clang \

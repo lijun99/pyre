@@ -1,4 +1,5 @@
-# -*- Makefile -*-
+# -*- makefile -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
@@ -14,6 +15,11 @@ mode.npm.locked := yes
 # orthogonal to the opt/debug optimization target; {make/modes/init.mm} turns it into the
 # coherent {DEBUG}/{NDEBUG} macro pair. the baseline is a deployment build, so the checks are off
 mode.compiler.assertions :=
+
+# webpack: non-empty builds the bundle for production; the project hears it as {NODE_ENV}, which its
+# webpack configuration reads to pick its mode and its source maps; a project that ignores it
+# builds as it always has
+mode.webpack.production := yes
 
 
 # end of file

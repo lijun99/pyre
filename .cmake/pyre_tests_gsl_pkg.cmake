@@ -1,13 +1,16 @@
 # -*- cmake -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
+
 
 #
 # gsl
 #
 # sanity
 pyre_test_python_testcase(tests/gsl.pkg/sanity.py)
+pyre_test_python_testcase(tests/gsl.pkg/bindings_absent.py)
 # general
 pyre_test_python_testcase(tests/gsl.pkg/rng.py)
 pyre_test_python_testcase(tests/gsl.pkg/pdf.py)

@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -26,12 +26,8 @@ main()
 
     // inject something into the channel
     channel
-#if defined(__cpp_lib_source_location)
-        //  location
+        // location
         << pyre::journal::here()
-#else
-        << pyre::journal::at(__HERE__)
-#endif
         // some metadata
         << pyre::journal::note("time", "now")
         // sign on

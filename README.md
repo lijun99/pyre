@@ -1,3 +1,11 @@
+<!--
+-*- markdown -*-
+-*- coding: utf-8 -*-
+
+michael a.g. aïvázis <michael.aivazis@para-sim.com>
+(c) 1998-2026 all rights reserved
+-->
+
 # pyre
 
 [![release](https://img.shields.io/github/v/release/pyre/pyre)](https://github.com/pyre/pyre/releases)
@@ -21,7 +29,7 @@ already be installed. Please contact the system administrators for instructions 
 it, and skip to the end of this section.
 
 If you are comfortable with `jupyter` notebooks, the current
-[release tarball](https://github.com/pyre/pyre/archive/refs/tags/v1.13.1.tar.gz)
+[release tarball](https://github.com/pyre/pyre/archive/refs/tags/v1.14.0.tar.gz)
 contains a notebook that can walk you through the installation procedure with minimal tweaking.
 It is located in `etc/mamba/pyre.ipynb`. Please report any difficulties you encounter.
 
@@ -61,7 +69,8 @@ dependencies:
   - git
   - gcc
   - gxx
-  - make
+  # GNU make 4.4 or later, which mm needs
+  - make >=4.4
   - nodejs
   - pybind11
 
@@ -199,7 +208,7 @@ active conda environment:
 ``` text
 ~/dv/pyre> mm builder.info
 
-    mm 5.3.0
+    mm 5.4.1
     Michael Aïvázis <michael.aivazis@para-sim.com>
     copyright 1998-2026 all rights reserved
 
@@ -256,4 +265,5 @@ installation. Let's verify:
 
 Both statements should succeed, and the latter should print out the `pyre` installation location.
 
-[comment]: <> (end of file)
+
+<!-- end of file -->

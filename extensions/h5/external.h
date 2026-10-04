@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -13,6 +13,7 @@
 #include <complex>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 // support
 #include <pyre/h5.h>

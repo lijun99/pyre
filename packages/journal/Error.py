@@ -1,4 +1,4 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -22,6 +22,14 @@ class Error(Channel, active=True, fatal=True):
     from .exceptions import ApplicationError
 
     # implementation details
+    def outcome(self):
+        """
+        What recording an entry leads to: the exception that states the condition, so the
+        caller can raise it whether i am fatal or not
+        """
+        # build the exception and hand it off
+        return self.complaint()
+
     def record(self):
         """
         Commit my payload to the journal
@@ -33,6 +41,7 @@ class Error(Channel, active=True, fatal=True):
 
     # constants
     severity = "error"  # the channel severity
+    headline = "application error"  # the summary of the condition when i'm fatal
     fatalError = ApplicationError  # the exception i raise when i'm fatal
 
 

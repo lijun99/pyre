@@ -1,4 +1,4 @@
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -17,6 +17,11 @@ class HL(pyre.flow.factory, family="pyre.viz.colormaps.hl", implements=Colormap)
     """
     The HL colormap
     """
+
+    # user configurable state
+    threshold = pyre.properties.float()
+    threshold.default = 0.4
+    threshold.doc = "the floor each color fades to as the hue moves away from it"
 
     # the inputs
     hue = pyre.viz.tile.input()

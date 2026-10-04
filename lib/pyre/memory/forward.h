@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -86,6 +86,11 @@ namespace pyre::memory {
     // wrapper, in which case the scalar it wraps
     template <typename T>
     struct Native;
+
+    // a cell value type that reads correctly at any address: the type itself when a single byte
+    // aligns it, or a byte ordered wrapper otherwise, which keeps its value as an array of bytes
+    template <typename T>
+    struct Unaligned;
 
     // recognize complex scalars, whose two components swap bytes independently
     template <typename T>

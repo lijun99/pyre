@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -32,7 +32,7 @@ main()
     // inject something
     channel
         // location
-        << pyre::journal::at(__HERE__)
+        << pyre::journal::at()
         // some metadata
         << pyre::journal::note("time", "now")
         // a message with a newline

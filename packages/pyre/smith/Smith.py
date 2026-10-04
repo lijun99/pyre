@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -90,6 +90,11 @@ class Smith(pyre.application, family="pyre.applications.smith", namespace="smith
             folder = cwd.mkdir(parent=destination, name=name, exist_ok=True)
             # go through the folder contents
             for entry, child in source.contents.items():
+                # bytecode is not part of a template, but installers that compile every python
+                # file they write, e.g. pip, leave it next to the template sources
+                if entry == "__pycache__" or entry.endswith(".pyc"):
+                    # so leave it behind
+                    continue
                 # attempt to
                 try:
                     # expand any macros in the name

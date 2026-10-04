@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -20,7 +20,7 @@ def test():
     device = File(path=filename)
 
     # check its name
-    assert device.name == "log"
+    assert device.name == "file"
     # and the path
     assert device.path == filename
 

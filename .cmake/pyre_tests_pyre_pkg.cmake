@@ -1,4 +1,5 @@
 # -*- cmake -*-
+# -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
@@ -75,6 +76,24 @@ pyre_test_python_testcase(tests/pyre.pkg/grid/inplace_buffer.py)
 pyre_test_python_testcase(tests/pyre.pkg/grid/inplace_subgrid.py)
 pyre_test_python_testcase(tests/pyre.pkg/grid/inplace_refusals.py)
 pyre_test_python_testcase(tests/pyre.pkg/extensions/core.py)
+
+
+#
+# pyre/envi
+#
+pyre_test_python_testcase(tests/pyre.pkg/envi/sanity.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/header.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/read.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/write.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/malformed.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/extras.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/mapinfo.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/cell.py)
+pyre_test_python_testcase(tests/pyre.pkg/envi/offset.py)
+# the drivers leave their scratch products behind so they can be inspected; sweep them
+pyre_test_python_cleanup(envi_write_test.hdr tests/pyre.pkg/envi/write.py)
+pyre_test_python_cleanup("envi_cell_test_*" tests/pyre.pkg/envi/cell.py)
+pyre_test_python_cleanup("envi_offset_test_*" tests/pyre.pkg/envi/offset.py)
 
 
 #
@@ -231,6 +250,7 @@ pyre_test_python_testcase(tests/pyre.pkg/schemata/timestamps.py)
 pyre_test_python_testcase(tests/pyre.pkg/schemata/casting_reason.py)
 pyre_test_python_testcase(tests/pyre.pkg/schemata/tuples.py)
 pyre_test_python_testcase(tests/pyre.pkg/schemata/uris.py)
+pyre_test_python_testcase(tests/pyre.pkg/schemata/components_unresolved.py)
 pyre_test_python_testcase(tests/pyre.pkg/schemata/typed.py)
 
 # the {ostreams} test requires setup+cleanup
@@ -484,6 +504,8 @@ pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentFamily.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentName.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentConditional.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentConditionalNested.py)
+pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentConditionalMultilevel.py)
+pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_componentConditionalMultilevelBinding.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/pfg_sample.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_empty.py)
@@ -493,6 +515,9 @@ pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentFamily.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentName.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentConditional.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentConditionalNested.py)
+pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentConditionalMultilevel.py)
+pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_componentConditionalMultilevelBinding.py)
+pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_facilityMaskedError.py)
 pyre_test_python_testcase(tests/pyre.pkg/codecs/yaml_sample.py)
 
 
@@ -524,6 +549,7 @@ pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_empty.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_missing.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_long.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_tail.py)
+pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_footer.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_trips.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_save.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/recipe.py)
@@ -537,6 +563,7 @@ pyre_test_python_testcase(tests/pyre.pkg/config/persist.py)
 # pyre/smith
 #
 pyre_test_python_testcase(tests/pyre.pkg/smith/smith_basic.py)
+pyre_test_python_testcase(tests/pyre.pkg/smith/smith_bytecode.py)
 
 
 #
@@ -545,6 +572,7 @@ pyre_test_python_testcase(tests/pyre.pkg/smith/smith_basic.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/sanity.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/exceptions.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/package_layout.py)
+pyre_test_python_testcase(tests/pyre.pkg/framework/package_layout_dist.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/slot.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/slot_instance.py)
 pyre_test_python_testcase(tests/pyre.pkg/framework/slot_algebra.py)
@@ -619,6 +647,7 @@ pyre_test_python_testcase(tests/pyre.pkg/components/component_defaults.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_instantiation.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_invocation.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_registration.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_lookup.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_configuration.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_configuration_constructor.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_configuration_inheritance.py)
@@ -768,6 +797,7 @@ pyre_test_python_testcase(tests/pyre.pkg/shells/application_sanity.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/application_instantiation.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/application_inheritance.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/application_namespace.py)
+pyre_test_python_testcase(tests/pyre.pkg/shells/application_private.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/script_sanity.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/script_instantiation.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/fork_sanity.py)

@@ -1,8 +1,9 @@
-// -*- C++ -*-
+// -*- c++ -*-
 // -*- coding: utf-8 -*-
 //
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // (c) 1998-2026 all rights reserved
+
 
 // support
 #include <cassert>
@@ -23,8 +24,8 @@ main(int argc, char * argv[])
     pyre::journal::init(argc, argv);
     pyre::journal::application("tensor_packings_arithmetic");
 
-    // make a channel
-    pyre::journal::info_t channel("pyre.tensor");
+    // make a developer channel, so the report appears only on request
+    pyre::journal::debug_t channel("pyre.tensor");
 
     {
         // report
@@ -151,7 +152,7 @@ main(int argc, char * argv[])
     }
 
     // flush
-    channel << pyre::journal::endl(__HERE__);
+    channel << pyre::journal::at() << pyre::journal::endl;
 
 
     // all done

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
@@ -14,7 +14,7 @@ def test():
     from journal.ext.journal import Firewall as firewall
 
     # send output to a log file
-    firewall.logfile(name="firewall_file_mode.log", mode="a")
+    firewall.logfile(path="firewall_file_mode.log", mode="a")
 
     # make a channel
     channel = firewall(name="test.journal.firewall")

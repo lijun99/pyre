@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# -*- Python -*-
+# -*- python -*-
 # -*- coding: utf-8 -*-
 #
 # michael a.g. aïvázis <michael.aivazis@para-sim.com>
 # (c) 1998-2026 all rights reserved
+
 
 # external
 import os
@@ -20,10 +21,12 @@ def version() -> str:
     metadata when the build happens outside a git checkout.
     """
     try:
+        # a checkout knows its tag, and a tarball made by git archive carries it in
+        # .git_archival.txt
         return get_version(root=".", relative_to=__file__, local_scheme="no-local-version")
     except LookupError:
-        # no .git here: we are building from an sdist, where setuptools_scm has
-        # already recorded the version in PKG-INFO
+        # neither: we are building from an sdist, where setuptools_scm has already
+        # recorded the version in the PKG-INFO it generated
         info = os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKG-INFO")
         with open(info) as stream:
             for line in stream:
@@ -71,7 +74,14 @@ skbuild.setup(
         f"-DPYRE_VERSION={cmakeVersion}",
         # put packages in {site-packages}
         f"-DPYRE_DEST_PACKAGES={packageDir}",
+        # a wheel carries no tests, so building them only costs time, and a test may need a newer
+        # platform than the wheel targets, e.g. {std::filesystem} on macOS before 10.15
+        "-DPYRE_BUILD_TESTING=OFF",
+        # install the libraries in {lib} on every platform, where environments look for them,
+        # rather than in {lib64}, which some linux distributions, e.g. the manylinux images, prefer
+        "-DCMAKE_INSTALL_LIBDIR=lib",
     ],
 )
+
 
 # end of file
