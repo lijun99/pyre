@@ -54,13 +54,19 @@ class Executive:
     errors = None  # the pile of exceptions raised during booting and configuration
 
     # high level interface
-    def loadConfiguration(self, uri, locator=None, priority=priority.user):
+    def loadConfiguration(self, uri, locator=None, priority=priority.user, required=False):
         """
         Load configuration settings from {uri} and insert them in the configuration database
-        with the given {priority}.
+        with the given {priority}; a source that can't be read is an error, and so is a
+        {required} source that can't be found
         """
+        # get the journal
+        import journal
+
         # parse the {uri}
         uri = self.uri().coerce(uri)
+        # the input stream, until the file server finds it
+        source = None
         # attempt to
         try:
             # ask the file server for the input stream
@@ -70,7 +76,17 @@ class Executive:
         except self.PyreError as error:
             # save it
             self.errors.append(error)
-            # and bail out
+            # and hold on to it, to complain outside the handler
+            reason = error
+        # if the source couldn't be opened
+        if source is None:
+            # and the caller can't do without it
+            if required:
+                # make a channel
+                channel = journal.error("pyre.config")
+                # and complain
+                channel.log(f"{locator}: {reason}")
+            # either way, bail out
             return
         # ask the configurator to process the stream
         errors = self.configurator.loadConfiguration(
@@ -78,6 +94,18 @@ class Executive:
         )
         # add any errors to my pile
         self.errors.extend(errors)
+        # if the source exists but can't be read
+        if errors:
+            # make a channel
+            channel = journal.error("pyre.config")
+            # describe each error, which may span several lines
+            for error in errors:
+                # each with its location
+                for line in str(error).splitlines():
+                    # one per line of the report
+                    channel.line(line)
+            # and complain
+            channel.log()
         # all done
         return
 
@@ -663,9 +691,12 @@ class Executive:
             return
         # go through the specified files
         for source in value.split(","):
-            # load the configuration
+            # load the configuration; the user asked for it, so it must be there
             self.loadConfiguration(
-                uri=source.strip(), locator=locator, priority=self.priority.command
+                uri=source.strip(),
+                locator=locator,
+                priority=self.priority.command,
+                required=True,
             )
         # and return
         return
