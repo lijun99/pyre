@@ -29,16 +29,18 @@ class Config(Codec):
 
         # make a parser
         parser = Parser()
-        # harvest the configuration events
-        configuration = parser.parse(uri=uri, stream=source, locator=locator)
+        # harvest the configuration events; the parser is lazy, so drive it to the end
+        configuration = list(parser.parse(uri=uri, stream=source, locator=locator))
         # grab the accumulated errors
         errors = parser.errors
         # if there were no errors
         if not errors:
             # return the harvested configuration events
             return configuration
-        # otherwise, throw away the harvested events
-        return []
+        # otherwise, list the errors with their locations, escaped for the description template
+        description = "\n".join(map(str, errors)).replace("{", "{{").replace("}", "}}")
+        # and complain
+        raise cls.DecodingError(codec=cls, uri=uri, description=description)
 
 
 # end of file
