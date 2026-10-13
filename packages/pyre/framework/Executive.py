@@ -76,8 +76,8 @@ class Executive:
         except self.PyreError as error:
             # save it
             self.errors.append(error)
-            # and hold on to it, to complain outside the handler
-            reason = error
+            # and hold on to its description, to complain outside the handler
+            reason = str(error)
         # if the source couldn't be opened
         if source is None:
             # and the caller can't do without it
