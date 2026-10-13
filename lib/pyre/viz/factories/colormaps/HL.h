@@ -11,7 +11,7 @@
 // my dependencies
 #include "forward.h"
 
-// encode three color channels into a microsoft bitmap
+// map hue and luminosity onto the three color channels
 template <class hueT, class luminosityT, class redT, class greenT, class blueT>
 class pyre::viz::factories::colormaps::HL : public pyre::flow::factory_t {
     // type aliases
@@ -37,6 +37,27 @@ public:
     using green_ref_type = std::shared_ptr<green_type>;
     using blue_ref_type = std::shared_ptr<blue_type>;
 
+    // the spelling of types
+    using string_type = string_t;
+
+    // the spelling of my type, and the descriptions of my slots and settings
+public:
+    // simulate my c++ declaration
+    static inline auto declSelf() -> string_type;
+    // the human readable form of my class name
+    static inline auto className() -> string_type;
+    // the descriptions of my slots, shared by every factory of my type
+    static inline auto declSlots() -> const slots_type &;
+    // the descriptions of my settings, shared by every factory of my type
+    static inline auto declSettings() -> const settings_type &;
+
+    // introspection
+public:
+    // the descriptions of my slots
+    inline virtual auto slots() const -> const slots_type & override;
+    // the descriptions of my settings
+    inline virtual auto settings() const -> const settings_type & override;
+
     // factory
 public:
     inline static auto create(const name_type & name = "", double threshold = 0.4)
@@ -51,6 +72,8 @@ public:
 
     // accessors
 public:
+    // get the threshold
+    auto threshold() const -> double;
     // input slots
     auto hue() -> hue_ref_type;
     auto luminosity() -> luminosity_ref_type;
@@ -61,6 +84,8 @@ public:
 
     // mutators
 public:
+    // set the threshold
+    auto threshold(double threshold) -> factory_ref_type;
     // input slots
     auto hue(hue_ref_type) -> factory_ref_type;
     auto luminosity(luminosity_ref_type) -> factory_ref_type;

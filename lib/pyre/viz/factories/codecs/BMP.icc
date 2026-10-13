@@ -12,6 +12,76 @@
 #include "BMP.h"
 
 
+// simulate my c++ declaration
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::declSelf() -> string_type
+{
+    // the type alias, with the declarations of my slots
+    return "pyre::viz::factories::codecs::bmp_t<" + red_type::declSelf() + ", "
+         + green_type::declSelf() + ", " + blue_type::declSelf() + ">";
+}
+
+
+// the human readable form of my class name
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::className() -> string_type
+{
+    // my kind
+    return "BMP";
+}
+
+
+// the descriptions of my slots
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::declSlots() -> const slots_type &
+{
+    // my slots, in the order i declare them
+    static const slots_type table {
+        slot_type::input<red_type>("red"),
+        slot_type::input<green_type>("green"),
+        slot_type::input<blue_type>("blue"),
+        slot_type::output<image_type>("image"),
+    };
+    // hand them off
+    return table;
+}
+
+
+// the descriptions of my settings
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::declSettings() -> const settings_type &
+{
+    // i have none
+    static const settings_type table {};
+    // hand them off
+    return table;
+}
+
+
+// the descriptions of my slots
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::slots() const -> const slots_type &
+{
+    // the ones of my type
+    return declSlots();
+}
+
+
+// the descriptions of my settings
+template <class redT, class greenT, class blueT>
+auto
+pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::settings() const -> const settings_type &
+{
+    // the ones of my type
+    return declSettings();
+}
+
+
 // factory
 template <class redT, class greenT, class blueT>
 auto
@@ -199,23 +269,56 @@ pyre::viz::factories::codecs::BMP<redT, greenT, blueT>::make(
         return self;
     }
 
+    // the channels are walked in memory order, which finds the pixels of a line next to each
+    // other only in tiles packed row major, as tiles are
+    using red_order_type = typename red_type::packing_type::order_type;
+    using green_order_type = typename green_type::packing_type::order_type;
+    using blue_order_type = typename blue_type::packing_type::order_type;
+    // so if any of them is packed otherwise
+    if (r->read().packing().order() != red_order_type::c()
+        || g->read().packing().order() != green_order_type::c()
+        || b->read().packing().order() != blue_order_type::c()) {
+        // make a channel
+        auto channel = pyre::journal::firewall_t("pyre.viz.factories.codecs.bmp");
+        // and complain
+        channel
+            // where
+            << pyre::journal::at()
+            // who
+            << "bmp '" << this->name() << "' at " << this << ":"
+            << pyre::journal::newline
+            // what
+            << "the color channels must be packed in row major order"
+            << pyre::journal::newline
+            // flush
+            << pyre::journal::endl;
+        // and bail, just in case firewalls aren't fatal
+        return self;
+    }
+
     // unpack the shape
     auto [height, width] = r->shape();
-    // make iterators to the input channels
-    auto redData = r->read().begin();
-    auto greenData = g->read().begin();
-    auto blueData = b->read().begin();
+    // the first cell of each of the input channels
+    auto redData = r->read().data();
+    auto greenData = g->read().data();
+    auto blueData = b->read().data();
     // make an iterator to the image payload
     auto imageData = bmp->write().begin();
+    // the format has no room for values outside the unit interval, so clip a color channel to it
+    // before scaling it to a byte, and let a value that is not a number count as zero
+    auto byte = [](double value) -> pixel_type {
+        // clip and scale
+        return static_cast<pixel_type>(0xff * std::min(1.0, std::max(0.0, value)));
+    };
 
     // encode: go through the rows
     for (auto row = 0; row < height; ++row) {
         // go through the columns
         for (auto col = 0; col < width; ++col) {
             // get the pixel values
-            pixel_type redPixel = static_cast<pixel_type>(0xff * (*redData++)) & 0xff;
-            pixel_type greenPixel = static_cast<pixel_type>(0xff * (*greenData++)) & 0xff;
-            pixel_type bluePixel = static_cast<pixel_type>(0xff * (*blueData++)) & 0xff;
+            pixel_type redPixel = byte(*redData++);
+            pixel_type greenPixel = byte(*greenData++);
+            pixel_type bluePixel = byte(*blueData++);
             // encode; note that the order is {blue, green, red}
             *imageData++ = bluePixel;
             *imageData++ = greenPixel;

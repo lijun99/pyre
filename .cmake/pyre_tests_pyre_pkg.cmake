@@ -79,6 +79,17 @@ pyre_test_python_testcase(tests/pyre.pkg/extensions/core.py)
 
 
 #
+# pyre/memory
+#
+pyre_test_python_testcase(tests/pyre.pkg/memory/sanity.py)
+pyre_test_python_testcase(tests/pyre.pkg/memory/cells.py)
+pyre_test_python_testcase(tests/pyre.pkg/memory/ordered.py)
+
+# the drivers leave their scratch products behind so they can be inspected; sweep them
+pyre_test_python_cleanup(memory_ordered_test.dat tests/pyre.pkg/memory/ordered.py)
+
+
+#
 # pyre/envi
 #
 pyre_test_python_testcase(tests/pyre.pkg/envi/sanity.py)
@@ -146,12 +157,17 @@ pyre_test_python_testcase(tests/pyre.pkg/filesystem/local_rootNotDirectory.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/local_make.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/zip.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/zip_open.py)
+pyre_test_python_cleanup(zip_open.zip tests/pyre.pkg/filesystem/zip_open.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/zip_rootNonexistent.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/zip_rootNotZipfile.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/finder.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/finder_pattern.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/simple_explorer.py)
 pyre_test_python_testcase(tests/pyre.pkg/filesystem/tree_explorer.py)
+pyre_test_python_testcase(tests/pyre.pkg/filesystem/earthaccess_error.py)
+pyre_test_python_testcase(tests/pyre.pkg/filesystem/earthaccess_flat.py)
+pyre_test_python_testcase(tests/pyre.pkg/filesystem/earthaccess_layout.py)
+pyre_test_python_testcase(tests/pyre.pkg/filesystem/earthaccess_refresh.py)
 
 # the {local_make} test modifies its local directory; so there are race conditions when running
 # the test suite in parallel with all the test that explore the current directory; run it after
@@ -468,6 +484,7 @@ pyre_test_python_testcase(tests/pyre.pkg/tracking/file.py)
 pyre_test_python_testcase(tests/pyre.pkg/tracking/fileregion.py)
 pyre_test_python_testcase(tests/pyre.pkg/tracking/script.py)
 pyre_test_python_testcase(tests/pyre.pkg/tracking/chain.py)
+pyre_test_python_testcase(tests/pyre.pkg/tracking/here.py)
 
 
 #
@@ -555,6 +572,7 @@ pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_save.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/recipe.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/recipe_owned.py)
 pyre_test_python_testcase(tests/pyre.pkg/config/persist.py)
+pyre_test_python_testcase(tests/pyre.pkg/config/yaml_editor_levels.py)
 # reverted pending review; in mm's drivers.exclude
 # pyre_test_python_testcase(tests/pyre.pkg/config/configurator_locators.py)
 
@@ -564,6 +582,8 @@ pyre_test_python_testcase(tests/pyre.pkg/config/persist.py)
 #
 pyre_test_python_testcase(tests/pyre.pkg/smith/smith_basic.py)
 pyre_test_python_testcase(tests/pyre.pkg/smith/smith_bytecode.py)
+pyre_test_python_testcase(tests/pyre.pkg/smith/smith_git_identity.py)
+pyre_test_python_testcase(tests/pyre.pkg/smith/smith_git_revision.py)
 
 
 #
@@ -667,6 +687,12 @@ pyre_test_python_testcase(tests/pyre.pkg/components/component_dict.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/quad.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/monitor.py)
 pyre_test_python_testcase(tests/pyre.pkg/components/tracker.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_array_default.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_instance_configuration_anonymous.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_list_default.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_secret.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_set_default.py)
+pyre_test_python_testcase(tests/pyre.pkg/components/component_tuple_default.py)
 
 
 #
@@ -756,6 +782,30 @@ pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_alarms.py)
 pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_signals.py)
 pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_pickler_over_pipe.py)
 pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_pickler_over_tcp.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/pickler_end_of_stream.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/pickler_over_socketpair.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_channels.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_channels_inflight.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_close_reuse.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_forget.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_pickler_over_socketpair.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/psl_rearm_during_dispatch.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_channels.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_channels_inflight.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_close_reuse.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_dead_registration.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_forget.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_pickler_over_socketpair.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_raise.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/selector_rearm_during_dispatch.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/socketpair.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/socketpair_bulk.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/socketpair_descriptors.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/socketpair_descriptors_socket.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/socketpair_inheritance.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/transport.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/transport_pipe.py)
+pyre_test_python_testcase(tests/pyre.pkg/ipc/transport_socket.py)
 
 
 #
@@ -773,6 +823,29 @@ pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_interrupt.py)
 pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_last_words.py)
 pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_overhear.py)
 pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_unborn.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/fork_dismiss.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/fork_leave.py)
+# the member leaves a mark when it retires; sweep the marks
+pyre_test_python_cleanup("fork_leave.retired.*" tests/pyre.pkg/nexus/fork_leave.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/fork_proxies.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/forkserver_instruct.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/forkserver_origin.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/forkserver_poison.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/pool_crews.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/pool_over_sockets.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_bench.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_casualty.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_dedup.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_misfire.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_patience.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_priority.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_resurrection.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_revoke.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_standdown.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_stillborn.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_subscriber.py)
+pyre_test_python_testcase(tests/pyre.pkg/nexus/staff_truncated.py)
 
 
 #
@@ -808,6 +881,8 @@ pyre_test_python_testcase(tests/pyre.pkg/shells/script_launching.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/fork_launching.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/daemon_launching.py)
 pyre_test_python_testcase(tests/pyre.pkg/shells/progress.py)
+pyre_test_python_testcase(tests/pyre.pkg/shells/application_help.py)
+pyre_test_python_testcase(tests/pyre.pkg/shells/web_service_spec.py)
 
 
 #
@@ -824,9 +899,11 @@ pyre_test_python_testcase(tests/pyre.pkg/h5/api/raster_roundtrip.py)
 pyre_test_python_testcase(tests/pyre.pkg/h5/api/raster_value.py)
 pyre_test_python_testcase(tests/pyre.pkg/h5/api/sanity.py)
 pyre_test_python_testcase(tests/pyre.pkg/h5/api/writer.py)
+pyre_test_python_testcase(tests/pyre.pkg/h5/api/access_errors.py)
 
 # the drivers leave their scratch products behind so they can be inspected; sweep them
 pyre_test_python_cleanup(file_create_empty.h5 tests/pyre.pkg/h5/api/file_create_empty.py)
+pyre_test_python_cleanup("access_errors.h5 access_errors_junk.h5" tests/pyre.pkg/h5/api/access_errors.py)
 pyre_test_python_cleanup(raster_roundtrip.h5 tests/pyre.pkg/h5/api/raster_roundtrip.py)
 pyre_test_python_cleanup(raster_value.h5 tests/pyre.pkg/h5/api/raster_value.py)
 pyre_test_python_cleanup(writer.h5 tests/pyre.pkg/h5/api/writer.py)
@@ -910,6 +987,24 @@ pyre_test_python_testcase(tests/pyre.pkg/flow/sanity.py)
 
 
 #
+# pyre/viz
+#
+pyre_test_python_testcase(tests/pyre.pkg/viz/descriptions.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/engines.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/operators.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_amplitude.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_bindings.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_catalogs.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_harvest.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_reader.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_realize.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_slice.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/recipe_staging.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/slots.py)
+pyre_test_python_testcase(tests/pyre.pkg/viz/specifications.py)
+
+
+#
 # pyre/pyre
 #
 pyre_test_python_testcase(tests/pyre.pkg/pyre/sanity.py)
@@ -941,6 +1036,11 @@ pyre_test_python_testcase(tests/pyre.pkg/http/render.py)
 pyre_test_python_testcase(tests/pyre.pkg/http/eventstream.py)
 pyre_test_python_testcase(tests/pyre.pkg/http/sse_preamble.py)
 pyre_test_python_testcase(tests/pyre.pkg/http/sse_opening.py)
+pyre_test_python_testcase(tests/pyre.pkg/http/deferred.py)
+pyre_test_python_testcase(tests/pyre.pkg/http/deferred_cancel.py)
+pyre_test_python_testcase(tests/pyre.pkg/http/hub_framing.py)
+pyre_test_python_testcase(tests/pyre.pkg/http/sse_chunk.py)
+pyre_test_python_testcase(tests/pyre.pkg/http/transmit.py)
 
 
 #

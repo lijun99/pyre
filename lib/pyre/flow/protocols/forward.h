@@ -9,7 +9,7 @@
 
 
 // my dependencies
-#include "../external.h"
+#include "../externals.h"
 
 
 // forward declarations
@@ -18,6 +18,9 @@ namespace pyre::flow::protocols {
     class Node;
     class Product;
     class Factory;
+    // the descriptions of the slots and the settings of factories
+    class Slot;
+    class Setting;
 } // namespace pyre::flow::protocols
 
 

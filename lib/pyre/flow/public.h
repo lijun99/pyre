@@ -8,32 +8,20 @@
 #pragma once
 
 // external packages
-#include "external.h"
+#include "externals.h"
 // set up the namespace
 #include "forward.h"
-
 // published type aliases and declarations that constitute the public API of this package
 // this is the file you are looking for
 #include "api.h"
+// loose functions
+#include "utilities.h"
 
-// base classes
-#include "protocols/Node.h"
-#include "protocols/Factory.h"
-#include "protocols/Product.h"
-
-// products
-#include "products/Tile.h"
-#include "products/Variable.h"
-
-// factories
-// arithmetic
-#include "factories/Binary.h"
-// addition
-#include "factories/AddTiles.h"
-#include "factories/AddVariables.h"
-// multiplication
-#include "factories/MultiplyTiles.h"
-#include "factories/MultiplyVariables.h"
+// the public headers of each sub-namespace
+#include "protocols/public.h"
+#include "products/public.h"
+#include "factories/public.h"
+#include "catalog/public.h"
 
 
 // end of file

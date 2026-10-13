@@ -138,13 +138,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(PYBIND11_CPP_STANDARD -std=c++23)
 set(PYBIND11_PYTHON_VERSION ${Python_VERSION})
 set(PYBIND11_FINDPYTHON ON) # Use new FindPython if available
-find_package(pybind11)
-
-# pybind11 pre-2.5 C++17 compilation is broken under Clang
-# see https://github.com/pybind/pybind11/issues/1604#issuecomment-443385783
-if(pybind11_VERSION VERSION_LESS 2.5 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(pybind11::module INTERFACE -fsized-deallocation)
-endif()
+# the bindings rely on the {smart_holder} of pybind11 3
+find_package(pybind11 3.0 REQUIRED)
 
 # set up cmake
 pyre_cmakeInit()
@@ -248,6 +243,7 @@ if(PYRE_BUILD_TESTING)
   # if we have MPI support
   if(MPI_FOUND)
     include(pyre_tests_mpi_pkg)
+    include(pyre_tests_mpi_ext)
     include(pyre_tests_mpi_lib)
   endif()
 

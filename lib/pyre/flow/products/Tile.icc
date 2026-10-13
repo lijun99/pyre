@@ -12,6 +12,26 @@
 #include "Tile.h"
 
 
+// simulate my c++ declaration
+template <class gridT>
+auto
+pyre::flow::products::Tile<gridT>::declSelf() -> string_type
+{
+    // the type alias, with the declaration of my grid
+    return "pyre::flow::products::tile_t<" + grid_type::declSelf() + ">";
+}
+
+
+// the human readable form of my class name
+template <class gridT>
+auto
+pyre::flow::products::Tile<gridT>::className() -> string_type
+{
+    // my kind, and the name of my grid
+    return "Tile" + grid_type::className();
+}
+
+
 // factory
 template <class gridT>
 auto
@@ -56,6 +76,18 @@ pyre::flow::products::Tile<gridT>::create(const name_type & name, shape_type sha
     return ref;
 }
 
+// make a tile over the cells of {grid}
+template <class gridT>
+auto
+pyre::flow::products::Tile<gridT>::create(const name_type & name, grid_type grid) -> ref_type
+{
+    // build an instance and wrap it in a shared pointer
+    auto ref = std::make_shared<Tile>(sentinel_type(), name, std::move(grid));
+    // hand it off
+    return ref;
+}
+
+
 // destructor
 template <class gridT>
 pyre::flow::products::Tile<gridT>::~Tile()
@@ -80,8 +112,8 @@ pyre::flow::products::Tile<gridT>::~Tile()
 template <class gridT>
 pyre::flow::products::Tile<gridT>::Tile(
     sentinel_type sentinel, const name_type & name, shape_type shape) :
-    // base class: start out clean
-    pyre::flow::protocols::Product(sentinel, name, false),
+    // base class: start out stale, since my cells hold nothing meaningful yet
+    pyre::flow::protocols::Product(sentinel, name, true),
     // members
     _data { packing_type(shape), shape.cells() }
 {}
@@ -89,7 +121,7 @@ pyre::flow::products::Tile<gridT>::Tile(
 template <class gridT>
 pyre::flow::products::Tile<gridT>::Tile(
     sentinel_type sentinel, const name_type & name, shape_type shape, cell_type value) :
-    // base class: start out clean
+    // base class: start out fresh, since my cells hold {value}
     pyre::flow::protocols::Product(sentinel, name, false),
     // members
     _data { packing_type(shape), shape.cells() }
@@ -97,6 +129,15 @@ pyre::flow::products::Tile<gridT>::Tile(
     // initialize
     std::fill(_data.begin(), _data.end(), value);
 }
+
+template <class gridT>
+pyre::flow::products::Tile<gridT>::Tile(
+    sentinel_type sentinel, const name_type & name, grid_type grid) :
+    // base class: start out fresh, since my cells hold whatever {grid} holds
+    pyre::flow::protocols::Product(sentinel, name, false),
+    // members
+    _data { std::move(grid) }
+{}
 
 // accessors
 template <class gridT>
@@ -137,6 +178,9 @@ template <class gridT>
 auto
 pyre::flow::products::Tile<gridT>::write() -> grid_type &
 {
+    // whatever is computed from my cells is about to be out of date; nobody can tell when the
+    // writing is over, so say so now
+    flush();
     // grant access to my data
     return _data;
 }

@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Filter import Filter
+from ..protocols.Filter import Filter
 
 
 # the filter that applies a power law
@@ -36,6 +36,9 @@ class Power(pyre.flow.factory, family="pyre.viz.filters.power", implements=Filte
     # the output
     power = pyre.viz.tile.output()
     power.doc = "the signal after the power law"
+
+    # the c++ templates whose instantiations do my work, when a recipe is staged
+    pyre_engines = ("pyre::flow::factories::filters::power_t",)
 
 
 # end of file

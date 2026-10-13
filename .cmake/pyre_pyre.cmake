@@ -174,6 +174,13 @@ function(pyre_pyreModule)
   target_sources(pyremodule PRIVATE
     extensions/pyre/__init__.cc
     extensions/pyre/api.cc
+    extensions/pyre/flow/__init__.cc
+    extensions/pyre/flow/catalog.cc
+    extensions/pyre/flow/descriptions.cc
+    extensions/pyre/flow/factories.cc
+    extensions/pyre/flow/nodes.cc
+    extensions/pyre/flow/rasters.cc
+    extensions/pyre/flow/tiles.cc
     extensions/pyre/grid/__init__.cc
     extensions/pyre/grid/engine.cc
     extensions/pyre/memory/__init__.cc
@@ -187,6 +194,8 @@ function(pyre_pyreModule)
     extensions/pyre/timers/wall_timers.cc
     extensions/pyre/viz/__init__.cc
     extensions/pyre/viz/bmp.cc
+    extensions/pyre/viz/factories.cc
+    extensions/pyre/viz/images.cc
     # chroma
     extensions/pyre/chroma/__init__.cc
     extensions/pyre/chroma/ansi.cc

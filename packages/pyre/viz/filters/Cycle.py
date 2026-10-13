@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Filter import Filter
+from ..protocols.Filter import Filter
 
 
 # the filter that maps the phase of a complex signal onto an interval
@@ -30,6 +30,9 @@ class Cycle(pyre.flow.factory, family="pyre.viz.filters.cycle", implements=Filte
     # the output
     cycle = pyre.viz.tile.output()
     cycle.doc = "the phase of each sample, mapped onto {interval}"
+
+    # the c++ templates whose instantiations do my work, when a recipe is staged
+    pyre_engines = ("pyre::flow::factories::filters::cycle_t",)
 
 
 # end of file

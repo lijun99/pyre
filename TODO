@@ -215,6 +215,19 @@
     16; a python only version would be ~110 h and fast enough for configuration files, but
     would leave the c++ clients out
 
+- viz and flow:
+
+  - walking a large grid through its iterators costs about 2.2 ns per cell, roughly 40 times a
+    pointer walk over its memory and 4 to 5 times indexing it, measured by
+    {tests/pyre.lib/viz/flow/bmp_walks.cc} on 512x512 tiles (2026-10-07); likely because the
+    shape and order of a canonical packing are runtime values, so every step loops over the axes
+    in order and carries, and every dereference computes the offset as a dot product with the
+    strides, which the optimizer cannot collapse into a pointer increment; anything that loops
+    over large grids through {begin()} pays for it; worth a look at what a packing could
+    precompute for the common case
+  - the bmp codec factory no longer does: it walks its channels in memory order, since tiles are
+      packed row major, and a firewall catches a tile that is not
+
 - traits:
 
   - treat them like components; some are: input and output streams have both configuration and

@@ -15,6 +15,13 @@ pyre_test_python_testcase(tests/pyre.ext/timers/wall_timer_example.py)
 pyre_test_python_testcase(tests/pyre.ext/timers/process_timer_instance.py)
 pyre_test_python_testcase(tests/pyre.ext/timers/process_timer_example.py)
 
+# the flow bindings test suite
+pyre_test_python_testcase(tests/pyre.ext/flow/catalog.py)
+pyre_test_python_testcase(tests/pyre.ext/flow/factories.py)
+pyre_test_python_testcase(tests/pyre.ext/flow/tiles.py)
+pyre_test_python_testcase(tests/pyre.ext/flow/rasters.py)
+pyre_test_python_testcase(tests/pyre.ext/flow/amplitude.py)
+
 # the grid bindings test suite
 pyre_test_python_testcase(tests/pyre.ext/grid/sanity.py)
 pyre_test_python_testcase(tests/pyre.ext/grid/heap.py)
@@ -29,12 +36,20 @@ pyre_test_python_testcase(tests/pyre.ext/grid/lifetime.py)
 
 # the drivers leave their scratch products behind so they can be inspected; sweep them
 pyre_test_python_cleanup(grid_map_test.dat tests/pyre.ext/grid/map.py)
-pyre_test_python_cleanup(grid_offset_test.dat tests/pyre.ext/grid/offset.py)
+pyre_test_python_cleanup("grid_offset_test.dat grid_offset_empty.dat" tests/pyre.ext/grid/offset.py)
 pyre_test_python_cleanup(grid_ordered_test.dat tests/pyre.ext/grid/ordered.py)
 pyre_test_python_cleanup(grid_readonly_test.dat tests/pyre.ext/grid/readonly.py)
 
-# N.B. the chroma bindings under tests/pyre.ext/chroma are registered in
-# pyre_tests_chroma.cmake, alongside the rest of the chroma suite
+# the memory bindings test suite
+pyre_test_python_testcase(tests/pyre.ext/memory/sanity.py)
+pyre_test_python_testcase(tests/pyre.ext/memory/cells.py)
+pyre_test_python_testcase(tests/pyre.ext/memory/heaps.py)
+pyre_test_python_testcase(tests/pyre.ext/memory/maps.py)
+pyre_test_python_testcase(tests/pyre.ext/memory/ordered.py)
+pyre_test_python_testcase(tests/pyre.ext/memory/views.py)
+
+# the drivers leave their scratch products behind so they can be inspected; sweep them
+pyre_test_python_cleanup(memory_ordered_test.dat tests/pyre.ext/memory/ordered.py)
 
 
 # end of file

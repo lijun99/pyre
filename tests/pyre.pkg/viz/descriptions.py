@@ -8,7 +8,7 @@
 
 """
 Check that the descriptions of the visualization factories name their slots the way the c++
-factories they describe name their accessors, so a flow drawn in python means the same thing
+factories and iterators they describe name them, so a flow drawn in python means the same thing
 as the one that runs
 """
 
@@ -25,12 +25,20 @@ def test():
             "constant": ([], ["tile"]),
             "cycle": (["signal"], ["cycle"]),
             "decimate": (["signal"], ["decimated"]),
-            "parametric": (["signal"], ["parametric"]),
+            "geometric": (["signal"], ["bin"]),
+            "logsaw": (["signal"], ["logsaw"]),
+            "polarsaw": (["signal"], ["polarsaw"]),
             "power": (["signal"], ["power"]),
+            "uniform": (["signal"], ["bin"]),
+        },
+        # the operators
+        pyre.viz.operators: {
+            "add": (["op1", "op2"], ["sum"]),
+            "amplitude": (["signal"], ["amplitude"]),
+            "multiply": (["op1", "op2"], ["product"]),
         },
         # the selectors
         pyre.viz.selectors: {
-            "amplitude": (["signal"], ["amplitude"]),
             "imaginary": (["signal"], ["imaginary"]),
             "phase": (["signal"], ["phase"]),
             "real": (["signal"], ["real"]),
@@ -41,9 +49,14 @@ def test():
             "hl": (["hue", "luminosity"], ["red", "green", "blue"]),
             "hsb": (["hue", "saturation", "brightness"], ["red", "green", "blue"]),
             "hsl": (["hue", "saturation", "luminosity"], ["red", "green", "blue"]),
+            "oklch": (["lightness", "chroma", "hue"], ["red", "green", "blue"]),
         },
-        # the codecs
-        pyre.viz.codecs: {
+        # the normalizers
+        pyre.viz.normalizers: {
+            "parametric": (["signal"], ["normalized"]),
+        },
+        # the encoders
+        pyre.viz.encoders: {
             "bmp": (["red", "green", "blue"], ["image"]),
         },
     }
@@ -60,8 +73,11 @@ def test():
 
     # the settings that the c++ factories take, with their defaults
     assert pyre.viz.filters.decimate().level == 0
-    assert pyre.viz.filters.parametric().interval == (0, 1)
+    assert pyre.viz.normalizers.parametric().interval == (0, 1)
     assert pyre.viz.colormaps.hl().threshold == 0.4
+    assert pyre.viz.filters.geometric().bins == 10
+    assert pyre.viz.filters.geometric().ratio == 2
+    assert pyre.viz.filters.uniform().bins == 10
 
     # all done
     return

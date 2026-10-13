@@ -43,6 +43,8 @@ public:
     // metamethods
 public:
     inline explicit Firewall(const name_type &, detail_type = 1, dent_type = 0);
+    // destructor
+    ~Firewall() = default;
 
     // implementation details
 public:
@@ -64,9 +66,9 @@ public:
     // disallow
 private:
     Firewall(const Firewall &) = delete;
-    Firewall(const Firewall &&) = delete;
-    const Firewall & operator=(const Firewall &) = delete;
-    const Firewall & operator=(const Firewall &&) = delete;
+    Firewall(Firewall &&) = delete;
+    Firewall & operator=(const Firewall &) = delete;
+    Firewall & operator=(Firewall &&) = delete;
 };
 
 

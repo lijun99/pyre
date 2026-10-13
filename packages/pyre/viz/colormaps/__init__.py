@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Colormap import Colormap as colormap
+from ..protocols.Colormap import Colormap as colormap
 
 
 # the implementations
@@ -49,7 +49,7 @@ def hsb():
     return HSB
 
 
-@pyre.foundry(implements=colormap, tip="the HSL colormap")
+@pyre.foundry(implements=colormap, tip="the HL colormap")
 def hl():
     """
     The HL colormap
@@ -71,6 +71,18 @@ def hsl():
 
     # and publish it
     return HSL
+
+
+@pyre.foundry(implements=colormap, tip="the OKLCH colormap")
+def oklch():
+    """
+    The OKLCH colormap
+    """
+    # pull the implementation
+    from .OKLCH import OKLCH
+
+    # and publish it
+    return OKLCH
 
 
 # end of file

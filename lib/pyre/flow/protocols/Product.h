@@ -19,13 +19,17 @@ public:
     using self_type = Product;
     // my superclass
     using super_type = Node;
-    // pair the factory slot name with a reference to the factory
-    // ideally, these should be weak pointers but the STL doesn't seem to support
-    // placing weak pointers in sets; so tearing down the workflow is the user's responsibility,
-    // until an alternative is found
-    using slot_type = std::tuple<name_type, factory_ref_type>;
+    // a binding: the name of the factory slot, and the factory that reads or writes me through it,
+    // which i do not keep alive
+    using slot_type = std::tuple<name_type, factory_weakref_type>;
+    // bindings are ordered by the name of the slot, and then by the factory, compared by the block
+    // that manages it, so a factory that has gone away keeps its place
+    struct slot_order_type {
+        // compare two bindings
+        inline auto operator()(const slot_type &, const slot_type &) const -> bool;
+    };
     // my bindings
-    using connections_type = std::set<slot_type>;
+    using connections_type = std::set<slot_type, slot_order_type>;
 
     // factory
 public:
@@ -35,7 +39,7 @@ public:
 public:
     // destructor
     virtual ~Product();
-    // constructor; not usable directly. call {create} instead
+    // constructor. not usable directly; call {create} instead
     inline Product(sentinel_type, const name_type & name, bool stale);
 
     // accessors
@@ -46,8 +50,14 @@ public:
 
     // mutators
 public:
-    inline auto dirty() -> void;
+    // mark me as fresh; only my writers know when that is true
     inline auto clean() -> void;
+
+    // mutators
+protected:
+    // mark me as stale, without telling anybody downstream; everybody else marks me through
+    // {flush}, so that a stale product always has stale products downstream of it
+    inline auto dirty() -> void;
 
     // interface
 public:
@@ -60,9 +70,11 @@ public:
 
     // build a reference to me
     inline auto ref() -> product_ref_type;
-    // ask my factories to remake me
+    // ask my factories to remake me; a factory that cannot read one of its inputs is reported on
+    // an error channel, and leaves me stale
     virtual auto make() -> product_ref_type;
-    // invalidate me and my upstream graph
+    // mark me and everything downstream of me as stale; a flush stops at a product that is stale
+    // already, since everything downstream of it is stale too
     virtual auto flush() -> void override;
 
     // implementation details - data

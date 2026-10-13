@@ -5,12 +5,8 @@
 // (c) 1998-2026 all rights reserved
 
 
-// externals
-#include "../external.h"
-// forward declarations
-#include "../forward.h"
-// type aliases
-#include "../api.h"
+// my api, along with my forward declarations and the external packages
+#include "api.h"
 
 // my class declaration
 #include "BMP.h"
@@ -44,7 +40,7 @@ pyre::viz::products::images::BMP::dump() -> ref_type
     // build a reference
     auto self = std::dynamic_pointer_cast<BMP>(ref());
     // unpack my shape
-    auto [width, height] = _shape;
+    auto [height, width] = _shape;
     // and build a view over my buffer
     auto view = read();
     // make a channel

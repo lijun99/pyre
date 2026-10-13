@@ -1,0 +1,320 @@
+// -*- c++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// (c) 1998-2026 all rights reserved
+
+// code guard
+#pragma once
+
+
+// my declarations
+#include "Power.h"
+
+
+// simulate my c++ declaration
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::declSelf() -> string_type
+{
+    // the type alias, with the declarations of my slots
+    return "pyre::flow::factories::filters::power_t<" + signal_type::declSelf() + ", "
+         + power_type::declSelf() + ">";
+}
+
+
+// the human readable form of my class name
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::className() -> string_type
+{
+    // my kind
+    return "Power";
+}
+
+
+// the descriptions of my slots
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::declSlots() -> const slots_type &
+{
+    // my slots, in the order i declare them
+    static const slots_type table {
+        slot_type::input<signal_type>("signal"),
+        slot_type::output<power_type>("power"),
+    };
+    // hand them off
+    return table;
+}
+
+
+// the descriptions of my settings
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::declSettings() -> const settings_type &
+{
+    // my settings
+    static const settings_type table {
+        setting_type::of<self_type>("mean", &self_type::mean, &self_type::mean),
+        setting_type::of<self_type>("scale", &self_type::scale, &self_type::scale),
+        setting_type::of<self_type>("exponent", &self_type::exponent, &self_type::exponent),
+    };
+    // hand them off
+    return table;
+}
+
+
+// the descriptions of my slots
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::slots() const -> const slots_type &
+{
+    // the ones of my type
+    return declSlots();
+}
+
+
+// the descriptions of my settings
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::settings() const -> const settings_type &
+{
+    // the ones of my type
+    return declSettings();
+}
+
+
+// factory
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::create(
+    const name_type & name, double mean, double scale, double exponent) -> factory_ref_type
+{
+    // make an instance and wrap it in a shared pointer
+    auto ref = std::make_shared<Power>(sentinel_type(), name, mean, scale, exponent);
+    // make a channel
+    auto channel = pyre::journal::debug_t("pyre.flow.factories.filters.power");
+    // let me know
+    channel
+        // where
+        << pyre::journal::at()
+        // mark
+        << "power '" << ref->name() << "' at " << ref.get() << ": create"
+        << pyre::journal::newline
+        // flush
+        << pyre::journal::endl;
+
+    // all done
+    return ref;
+}
+
+// destructor
+template <class signalT, class powerT>
+pyre::flow::factories::filters::Power<signalT, powerT>::~Power()
+{
+    // make a channel
+    auto channel = pyre::journal::debug_t("pyre.flow.factories.filters.power");
+    // let me know
+    channel
+        // where
+        << pyre::journal::at()
+        // mark
+        << "power '" << name() << "' at " << this << ": destroy"
+        << pyre::journal::newline
+        // flush
+        << pyre::journal::endl;
+
+    // all done
+    return;
+}
+
+// constructor
+template <class signalT, class powerT>
+pyre::flow::factories::filters::Power<signalT, powerT>::Power(
+    sentinel_type sentinel, const name_type & name, double mean, double scale, double exponent) :
+    // superclass
+    super_type(sentinel, name),
+    // members
+    _mean { mean },
+    _scale { scale },
+    _exponent { exponent }
+{}
+
+// accessors
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::mean() const -> double
+{
+    // easy enough
+    return _mean;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::scale() const -> double
+{
+    // easy enough
+    return _scale;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::exponent() const -> double
+{
+    // easy enough
+    return _exponent;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::signal() -> signal_ref_type
+{
+    // look up the product bound to my {signal} slot and return it
+    return std::dynamic_pointer_cast<signal_type>(input("signal"));
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::power() -> power_ref_type
+{
+    // look up the product bound to my {signal} slot and return it
+    return std::dynamic_pointer_cast<power_type>(output("power"));
+}
+
+// mutators
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::mean(double mean) -> factory_ref_type
+{
+    // adjust
+    _mean = mean;
+    // invalidate the downstream graph
+    flush();
+    // make a self reference
+    auto self = std::dynamic_pointer_cast<Power>(ref());
+    // and return it
+    return self;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::scale(double scale) -> factory_ref_type
+{
+    // adjust
+    _scale = scale;
+    // invalidate the downstream graph
+    flush();
+    // make a self reference
+    auto self = std::dynamic_pointer_cast<Power>(ref());
+    // and return it
+    return self;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::exponent(double exponent)
+    -> factory_ref_type
+{
+    // adjust
+    _exponent = exponent;
+    // invalidate the downstream graph
+    flush();
+    // make a self reference
+    auto self = std::dynamic_pointer_cast<Power>(ref());
+    // and return it
+    return self;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::signal(signal_ref_type signal)
+    -> factory_ref_type
+{
+    // bind {signal} to my slot
+    addInput("signal", std::static_pointer_cast<pyre::flow::protocols::Product>(signal));
+    // make a self reference
+    auto self = std::dynamic_pointer_cast<Power>(ref());
+    // and return it
+    return self;
+}
+
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::power(power_ref_type power)
+    -> factory_ref_type
+{
+    // bind {power} to my slot
+    addOutput("power", std::static_pointer_cast<pyre::flow::protocols::Product>(power));
+    // make a self reference
+    auto self = std::dynamic_pointer_cast<Power>(ref());
+    // and return it
+    return self;
+}
+
+// interface
+template <class signalT, class powerT>
+auto
+pyre::flow::factories::filters::Power<signalT, powerT>::make(
+    const name_type & slot, super_type::product_ref_type product) -> super_type::factory_ref_type
+{
+    // chain up
+    auto self = super_type::make(slot, product);
+    // get read access to the signal
+    auto & signal = this->signal()->read();
+    // get write access to the power data
+    auto & power = this->power()->write();
+    // get the number cells in the output tile
+    auto cells = power.packing().cells();
+    // make sure the input is compatible
+    bool ok = cells == signal.packing().cells();
+    // if not
+    if (!ok) {
+        // make a channel
+        auto channel = pyre::journal::error_t("pyre.flow.factories.filters.power");
+        // complain
+        channel
+            // where
+            << pyre::journal::at()
+            // who
+            << "power '" << this->name() << "' at " << this << ":"
+            << pyre::journal::newline
+            // what
+            << "shape mismatch in the input and output slots"
+            << pyre::journal::newline
+            // inputs
+            << "inputs "
+            << pyre::journal::newline
+            // indent
+            << pyre::journal::indent
+            // signal
+            << "signal: " << signal.packing().cells()
+            << pyre::journal::newline
+            // outdent
+            << pyre::journal::outdent
+            // outputs
+            << "outputs: "
+            << pyre::journal::newline
+            // indent
+            << pyre::journal::indent
+            // power
+            << "power: " << power.packing().cells()
+            << pyre::journal::newline
+            // outdent
+            << pyre::journal::outdent
+            // flush
+            << pyre::journal::endl;
+        // and bail, just in case errors aren't fatal
+        return self;
+    }
+
+    // go over the cells
+    for (decltype(cells) cell = 0; cell < cells; ++cell) {
+        // filter and store
+        power[cell] = _scale * std::pow(signal[cell] / _mean, _exponent);
+    }
+    // all done
+    return self;
+}
+
+
+// end of file

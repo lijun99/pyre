@@ -9,7 +9,7 @@
 
 
 // my dependencies
-#include "../external.h"
+#include "../externals.h"
 #include "../products/forward.h"
 
 
@@ -35,6 +35,11 @@ namespace pyre::flow::factories {
     template <class op1T, class op2T, class resultT>
     class Multiply<products::Variable, op1T, op2T, resultT>;
 } // namespace pyre::flow::factories
+
+// the per-namespace forward declarations
+#include "filters/forward.h"
+#include "sources/forward.h"
+#include "selectors/forward.h"
 
 
 // end of file

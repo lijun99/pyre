@@ -39,7 +39,8 @@ pyre::flow::protocols::Factory::Factory(sentinel_type sentinel, const name_type 
     Node(sentinel, name),
     // data members
     _inputs {},
-    _outputs {}
+    _outputs {},
+    _family {}
 {}
 
 // accessors
@@ -53,8 +54,8 @@ pyre::flow::protocols::Factory::input(const name_type & name) const -> product_r
         // there is no binding
         return product_ref_type(nullptr);
     }
-    // otherwise, return the binding
-    return spot->second;
+    // otherwise, return the product, if it is still around
+    return spot->second.lock();
 }
 
 auto
@@ -72,14 +73,14 @@ pyre::flow::protocols::Factory::output(const name_type & name) const -> product_
 }
 
 auto
-pyre::flow::protocols::Factory::inputs() const -> const connectors_type &
+pyre::flow::protocols::Factory::inputs() const -> const inputs_type &
 {
     // easy enough
     return _inputs;
 }
 
 auto
-pyre::flow::protocols::Factory::outputs() const -> const connectors_type &
+pyre::flow::protocols::Factory::outputs() const -> const outputs_type &
 {
     // easy enough
     return _outputs;
@@ -92,6 +93,26 @@ pyre::flow::protocols::Factory::ref() -> factory_ref_type
 {
     // build an instance and wrap it in a shared pointer
     return std::dynamic_pointer_cast<Factory>(shared_from_this());
+}
+
+
+// the family of the component i stand for
+auto
+pyre::flow::protocols::Factory::family() const -> const name_type &
+{
+    // easy enough
+    return _family;
+}
+
+
+// record the family of the component i stand for
+auto
+pyre::flow::protocols::Factory::family(const name_type & family) -> void
+{
+    // record it
+    _family = family;
+    // all done
+    return;
 }
 
 

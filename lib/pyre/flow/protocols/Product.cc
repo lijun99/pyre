@@ -84,14 +84,27 @@ pyre::flow::protocols::Product::flush() -> void
         << pyre::journal::newline
         // flush
         << pyre::journal::endl;
+    // if i am stale already, so is everything downstream of me
+    if (_stale) {
+        // so there is nothing to do
+        return;
+    }
     // chain up
     Node::flush();
     // mark me
     dirty();
-    // go through my readers
+    // forget the readers that have gone away
+    std::erase_if(_readers, [](const slot_type & binding) {
+        // which the expired references are
+        return std::get<1>(binding).expired();
+    });
+    // go through the rest
     for (auto & [slot, reader] : _readers) {
-        // and flush each one
-        reader->flush();
+        // and flush each one, if it is still around
+        if (auto factory = reader.lock()) {
+            // by asking it to flush
+            factory->flush();
+        }
     }
     // all done
     return;
@@ -116,10 +129,43 @@ pyre::flow::protocols::Product::make() -> product_ref_type
     auto self = ref();
     // if i'm stale
     if (_stale) {
-        // go through my writers
+        // forget the writers that have gone away
+        std::erase_if(_writers, [](const slot_type & binding) {
+            // which the expired references are
+            return std::get<1>(binding).expired();
+        });
+        // go through the rest
         for (auto & [slot, writer] : _writers) {
-            // ask each one to refresh me
-            writer->make(slot, self);
+            // get the factory
+            auto factory = writer.lock();
+            // the inputs it cannot read
+            auto lost = factory->missing();
+            // if there are any
+            if (!lost.empty()) {
+                // make a channel
+                auto channel = pyre::journal::error_t("pyre.flow.products.make");
+                // complain
+                channel
+                    // where
+                    << pyre::journal::at()
+                    // what
+                    << "cannot make '" << name() << "'"
+                    << pyre::journal::newline
+                    // why
+                    << "factory '" << factory->name() << "' cannot read its input slots"
+                    << pyre::journal::newline << pyre::journal::indent;
+                // go through the slots
+                for (const auto & input : lost) {
+                    // name each one
+                    channel << input << pyre::journal::newline;
+                }
+                // flush
+                channel << pyre::journal::outdent << pyre::journal::endl;
+                // and leave me stale
+                return self;
+            }
+            // ask it to refresh me
+            factory->make(slot, self);
         }
         // mark me as clean
         clean();

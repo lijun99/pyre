@@ -18,9 +18,20 @@ import pyre.smith
 
 
 def test():
+    """
+    Generate a project from the basic template and check its configuration file
+    """
     # for the scratch area
     import os
     import tempfile
+
+    # give git an identity, so the initial revision can be recorded wherever the test runs
+    os.environ.update(
+        GIT_AUTHOR_NAME="pyre tests",
+        GIT_AUTHOR_EMAIL="tests@pyre.invalid",
+        GIT_COMMITTER_NAME="pyre tests",
+        GIT_COMMITTER_EMAIL="tests@pyre.invalid",
+    )
 
     # the templates live in the installation, under {share/pyre}
     vault = pyre.prefix / "share" / "pyre" / "templates" / "basic"

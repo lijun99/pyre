@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Selector import Selector
+from ..protocols.Selector import Selector
 
 
 # the selector of the imaginary part of a complex signal
@@ -25,6 +25,9 @@ class Imaginary(pyre.flow.factory, family="pyre.viz.selectors.imaginary", implem
     # the output
     imaginary = pyre.viz.tile.output()
     imaginary.doc = "the imaginary part of each sample"
+
+    # the c++ templates whose instantiations do my work, when a recipe is staged
+    pyre_engines = ("pyre::flow::factories::selectors::imaginary_t",)
 
 
 # end of file

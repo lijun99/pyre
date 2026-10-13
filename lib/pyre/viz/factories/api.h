@@ -7,8 +7,14 @@
 // code guard
 #pragma once
 
-// get the canonical header
-#include "../api.h"
+
+// the forward declarations of {pyre::viz::factories}
+#include "forward.h"
+
+
+// the api of each sub-namespace
+#include "codecs/api.h"
+#include "colormaps/api.h"
 
 
 // end of file

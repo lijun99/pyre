@@ -42,6 +42,8 @@ public:
     // metamethods
 public:
     inline explicit Help(const name_type & name, detail_type = 1, dent_type = 0);
+    // destructor
+    ~Help() = default;
 
     // implementation details
 public:
@@ -60,9 +62,9 @@ public:
     // disallow
 private:
     Help(const Help &) = delete;
-    Help(const Help &&) = delete;
-    const Help & operator=(const Help &) = delete;
-    const Help & operator=(const Help &&) = delete;
+    Help(Help &&) = delete;
+    Help & operator=(const Help &) = delete;
+    Help & operator=(Help &&) = delete;
 };
 
 

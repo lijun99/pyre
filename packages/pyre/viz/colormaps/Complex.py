@@ -9,7 +9,10 @@
 import pyre
 
 # the protocol
-from .Colormap import Colormap
+from ..protocols.Colormap import Colormap
+
+# the specification of my outputs
+from ..protocols.Channel import Channel
 
 
 # a map well suited to rendering complex values
@@ -23,13 +26,13 @@ class Complex(pyre.flow.factory, family="pyre.viz.colormaps.complex", implements
     signal.doc = "the complex signal"
 
     # the outputs
-    red = pyre.viz.tile.output()
+    red = Channel.output()
     red.doc = "the red channel"
 
-    green = pyre.viz.tile.output()
+    green = Channel.output()
     green.doc = "the green channel"
 
-    blue = pyre.viz.tile.output()
+    blue = Channel.output()
     blue.doc = "the blue channel"
 
     # user configurable state

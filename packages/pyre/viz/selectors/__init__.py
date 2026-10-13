@@ -9,22 +9,10 @@
 import pyre
 
 # the protocol
-from .Selector import Selector as selector
+from ..protocols.Selector import Selector as selector
 
 
 # the implementations
-@pyre.foundry(implements=selector, tip="the selector of the amplitude of a complex signal")
-def amplitude():
-    """
-    The selector of the amplitude of a complex signal
-    """
-    # pull the implementation
-    from .Amplitude import Amplitude
-
-    # and publish it
-    return Amplitude
-
-
 @pyre.foundry(implements=selector, tip="the selector of the imaginary part of a complex signal")
 def imaginary():
     """

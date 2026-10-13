@@ -44,6 +44,8 @@ public:
     // metamethods
 public:
     inline explicit Error(const name_type & name, detail_type = 1, dent_type = 0);
+    // destructor
+    ~Error() = default;
 
     // implementation details
 public:
@@ -65,9 +67,9 @@ public:
     // disallow
 private:
     Error(const Error &) = delete;
-    Error(const Error &&) = delete;
-    const Error & operator=(const Error &) = delete;
-    const Error & operator=(const Error &&) = delete;
+    Error(Error &&) = delete;
+    Error & operator=(const Error &) = delete;
+    Error & operator=(Error &&) = delete;
 };
 
 

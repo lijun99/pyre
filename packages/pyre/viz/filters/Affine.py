@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Filter import Filter
+from ..protocols.Filter import Filter
 
 
 # the filter that maps [0,1] onto an interval
@@ -29,6 +29,9 @@ class Affine(pyre.flow.factory, family="pyre.viz.filters.affine", implements=Fil
     # the output
     affine = pyre.viz.tile.output()
     affine.doc = "the signal mapped onto {interval}"
+
+    # the c++ templates whose instantiations do my work, when a recipe is staged
+    pyre_engines = ("pyre::flow::factories::filters::affine_t",)
 
 
 # end of file

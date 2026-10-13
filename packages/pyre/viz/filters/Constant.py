@@ -9,7 +9,7 @@
 import pyre
 
 # the protocol
-from .Filter import Filter
+from ..protocols.Filter import Filter
 
 
 # a source of a constant signal
@@ -27,6 +27,9 @@ class Constant(pyre.flow.factory, family="pyre.viz.filters.constant", implements
     # the output
     tile = pyre.viz.tile.output()
     tile.doc = "the constant signal"
+
+    # the c++ templates whose instantiations do my work, when a recipe is staged
+    pyre_engines = ("pyre::flow::factories::filters::constant_t",)
 
 
 # end of file

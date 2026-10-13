@@ -42,6 +42,8 @@ public:
     // metamethods
 public:
     inline explicit Informational(const name_type & name, detail_type = 1, dent_type = 0);
+    // destructor
+    ~Informational() = default;
 
     // implementation details
 public:
@@ -60,9 +62,9 @@ public:
     // disallow
 private:
     Informational(const Informational &) = delete;
-    Informational(const Informational &&) = delete;
-    const Informational & operator=(const Informational &) = delete;
-    const Informational & operator=(const Informational &&) = delete;
+    Informational(Informational &&) = delete;
+    Informational & operator=(const Informational &) = delete;
+    Informational & operator=(Informational &&) = delete;
 };
 
 
