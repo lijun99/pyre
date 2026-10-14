@@ -164,6 +164,8 @@ class Scanner(metaclass=Lexer):
             except self.ParsingError as error:
                 # forward it to my client
                 client.throw(type(error), error)
+                # and wait for the next token, since no new one came with the error
+                continue
             # if it is not whitespace
             if not isinstance(token, self.whitespace):
                 # pass it along
