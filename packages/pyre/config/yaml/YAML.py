@@ -37,8 +37,10 @@ class YAML(Codec):
         if not errors:
             # return the harvested configuration events
             return configuration
-        # otherwise, throw away the harvested events
-        return []
+        # otherwise, list the errors with their locations, escaped for the description template
+        description = "\n".join(map(str, errors)).replace("{", "{{").replace("}", "}}")
+        # and complain
+        raise cls.DecodingError(codec=cls, uri=uri, description=description)
 
 
 # end of file
