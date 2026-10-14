@@ -48,6 +48,12 @@ class Parser:
                 doc = loader.get_single_node()
                 # and process the contents
                 return self.process(doc=doc, loader=loader, uri=uri, locator=locator)
+            # if the document is malformed
+            except yaml.YAMLError as error:
+                # record the error, which knows where in the file it is
+                self.errors.append(error)
+                # and harvest nothing
+                return []
             # release the loader
             finally:
                 # in every case
