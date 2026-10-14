@@ -30,15 +30,18 @@ class Sequence(Container):
     complaint = "could not coerce {0.value!r} to type "
 
     # interface
-    def str(self, value):
+    def string(self, value):
         """
         Render value as a string that can be persisted for later coercion
         """
         # respect {None}
         if value is None:
+            # by leaving it alone
             return None
-        # my value knows
-        return str(self.container(str(item) for item in value))
+        # get my schema
+        schema = self.schema
+        # render each item, and put them together in the form my text is read back from
+        return f"{self.delimiter} ".join(schema.string(item) for item in value)
 
     def json(self, value):
         """
@@ -80,9 +83,16 @@ class Sequence(Container):
                     # want facilities to use the name of my node as the name of any instantiated
                     # components
                     yield self.schema.process(value=entry, incognito=incognito, **kwds)
-                # if anything goes wrong that it is managed by the framework, assume it has
-                # been communicated to the user
-                except pyre.PyreError:
+                # if anything goes wrong that it is managed by the framework
+                except pyre.PyreError as error:
+                    # get the journal; not when this module is loaded, since that happens while
+                    # pyre boots, before the journal can find its devices
+                    import journal
+
+                    # make a channel
+                    channel = journal.warning("pyre.config.containers")
+                    # say which entry is left out, and why
+                    channel.log(f"skipping {entry!r}: {error}")
                     # and skip this entry
                     continue
             # all done
@@ -91,6 +101,22 @@ class Sequence(Container):
         description = self.complaint + self.type
         # and complain
         raise self.CastingError(value=value, description=description)
+
+    # visiting
+    def _pyre_identify(self, authority, **kwds):
+        """
+        Let {authority} know i am a sequence
+        """
+        # attempt to
+        try:
+            # ask {authority} for my handler
+            handler = authority._pyre_onSequence
+        # if it doesn't understand
+        except AttributeError:
+            # chain up
+            return super()._pyre_identify(authority=authority, **kwds)
+        # otherwise, invoke the handler
+        return handler(schema=self, **kwds)
 
 
 # end of file

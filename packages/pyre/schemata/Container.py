@@ -45,10 +45,16 @@ class Container(Schema):
         # get the worker to build an iterable, cast it into my container type and return it
         return self.container(self._coerce(value=value, **kwds))
 
-    def render(self, renderer, value, workload):
+    def render(self, renderer, value, incognito=False, **kwds):
         """
         Render {value} using {renderer}
         """
+        # if i'm the item of another container
+        if incognito:
+            # i fit on its line
+            yield renderer.value(value=self.string(value))
+            # and i'm done
+            return
         # get my schema
         schema = self.schema
         # render just my name
@@ -56,13 +62,27 @@ class Container(Schema):
         # go through the items
         for item in value:
             # ask my schema to render each one
-            entry = ",".join(
-                schema.render(renderer=renderer, value=item, workload=workload, incognito=True)
-            )
+            entry = ",".join(schema.render(renderer=renderer, value=item, incognito=True, **kwds))
             # and put it on a separate line
             yield renderer.value(value=f"{entry},")
         # all done
         return
+
+    # visiting
+    def _pyre_identify(self, authority, **kwds):
+        """
+        Let {authority} know i am a container
+        """
+        # attempt to
+        try:
+            # ask {authority} for my handler
+            handler = authority._pyre_onContainer
+        # if it doesn't understand
+        except AttributeError:
+            # chain up
+            return super()._pyre_identify(authority=authority, **kwds)
+        # otherwise, invoke the handler
+        return handler(schema=self, **kwds)
 
     # meta-methods
     def __init__(self, default=object, schema=Schema(), **kwds):
